@@ -5,10 +5,7 @@
 clear; clc; close all;
 
 %% parameters
-% pp2do = [1:16];
-pp2do = [17:41];
-% pp2do           = [17, 18, 21, 22, 23, 24, 26, 29, 30, 31, 32, 35]; %yes capture rt, based on minimum diff of 19.5 ms (incon vs con)
-% pp2do           = [19, 20, 25, 27, 28, 33, 34, 36, 37, 38, 39, 40, 41]; %no capture rt, based on minimum diff of 19.5 ms (incon vs con)
+pp2do = [1:4];
 
 nsmooth         = 200;
 baselineCorrect = 1;
