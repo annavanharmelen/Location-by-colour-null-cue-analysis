@@ -6,8 +6,8 @@ statcfg.xax = saccade.time;
 statcfg.npermutations = 1000;
 statcfg.clusterStatEvalaluationAlpha = 0.05;
 statcfg.nsub = s;
-statcfg.statMethod = 'montecarlo';
-%statcfg.statMethod = 'analytic';
+%statcfg.statMethod = 'montecarlo';
+statcfg.statMethod = 'analytic';
 
 % data_cond1 = d3(:,2,451:1951);
 % data_cond2 = d3(:,4,451:1951);
