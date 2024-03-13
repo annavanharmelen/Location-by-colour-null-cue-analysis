@@ -4,14 +4,14 @@
 clear; clc; close all;
 
 %% parameters
-for pp = [21, 22, 24, 26, 31, 32];
+for pp = [1];
 
     oneOrTwoD       = 1; oneOrTwoD_options = {'_1D','_2D'};
     plotResults     = 1;
 
     %% load epoched data of this participant data
-    param = getSubjParam_AnnaVidi1(pp);
-    load([param.path, '\epoched_data\eyedata_AnnaVidi1','_'  param.subjName], 'eyedata');
+    param = getSubjParam(pp);
+    load([param.path, '\epoched_data\eyedata_vidi3','_'  param.subjName], 'eyedata');
 
     %% add relevant behavioural file data
 
