@@ -5,197 +5,211 @@ clc
 %% set parameters and loops
 see_performance = 0;
 display_percentageok = 1;
-plot_individuals = 0;
-plot_averages = 1;
+plot_individuals = 1;
+plot_averages = 0;
 
-pp2do = [1]; 
+pp2do = [1:4]; 
 p = 0;
 
-bar_size = 0.8;
-
-colours = [114, 182, 161;...
-           149, 163, 192;...
-           233, 150, 117;...
-           194, 102, 162];
-colours = colours/255;
-
-dark_colours = [50, 79, 70;
-                58, 67, 88;
-                105, 67, 52;
-                92, 49, 77];
-
-dark_colours = dark_colours/255;
-
-labels = {'congruent', 'incongruent'};
-percentageok = zeros(size(pp2do));
-precision = zeros(size(pp2do, 2), 2);
-pT = zeros(size(pp2do, 2), 2);
-pNT = zeros(size(pp2do, 2), 2);
-pU = zeros(size(pp2do, 2), 2);
-decisiontime = zeros(size(pp2do, 2), 4);
-decisiontime_std = zeros(size(pp2do, 2), 4);
-error = zeros(size(pp2do, 2), 4);
-overall_dt = zeros(size(pp2do));
-overall_error = zeros(size(pp2do));
-capture_rt = zeros(size(pp2do, 2), 3);
-capture_error = zeros(size(pp2do, 2), 3);
-capture_effectsize = zeros(size(pp2do, 2), 3);
-ppnum = zeros(size(pp2do));
-total_correct = zeros(size(pp2do, 2), 4);
-total_wrong = zeros(size(pp2do, 2), 4);
-total_correct_capture = zeros(size(pp2do, 2), 4);
-proportion_correct = zeros(size(pp2do, 2), 4);
-proportion_wrong = zeros(size(pp2do, 2), 4);
-proportion_correct_capture = zeros(size(pp2do, 2), 4);
+[bar_size, colours,  dark_colours, labels, subplot_size, percentageok] = setBehaviourParam(pp2do);
 
 for pp = pp2do
-p = p+1;
+    p = p+1;
+    ppnum(p) = pp;
+    figure_nr = 1;
 
-param = getSubjParam(pp);
-disp(['getting data from ', param.subjName]);
+    param = getSubjParam(pp);
+    disp(['getting data from ', param.subjName]);
+    
+    %% load actual behavioural data
+    behdata = readtable(param.log);
+    
+    %% update signed error to stay within -90/+90
+    behdata.signed_difference(behdata.signed_difference>90) = behdata.signed_difference(behdata.signed_difference>90)-180;
+    behdata.signed_difference(behdata.signed_difference<-90) = behdata.signed_difference(behdata.signed_difference<-90)+180;
+    
+    %% check ok trials, just based on decision time, because this one is unlimited.
+    oktrials = abs(zscore(behdata.idle_reaction_time_in_ms))<=3; 
+    percentageok(p) = mean(oktrials)*100;
 
-%% load actual behavioural data
-behdata = readtable(param.log);
+    %% display percentage OK
+    if display_percentageok
+        fprintf('%s has %.2f%% OK trials\n\n', param.subjName, percentageok(p))
+    end
 
-%% update signed error to stay within -90/+90
-behdata.signed_difference(behdata.signed_difference>90) = behdata.signed_difference(behdata.signed_difference>90)-180;
-behdata.signed_difference(behdata.signed_difference<-90) = behdata.signed_difference(behdata.signed_difference<-90)+180;
+    %% basic data checks, each pp in own subplot
+    if plot_individuals
+        figure(figure_nr);
+        figure_nr = figure_nr+1;
+        subplot(subplot_size,subplot_size,p);
+        histogram(behdata.response_time_in_ms(oktrials),50);
+        title(['response time - pp ', num2str(pp2do(p))]);
+        xlim([0 1500]);
 
-%% check ok trials, just based on decision time, because this one is unlimited.
-oktrials = abs(zscore(behdata.idle_reaction_time_in_ms))<=3; 
-percentageok(p) = mean(oktrials)*100;
+        figure(figure_nr);
+        figure_nr = figure_nr+1;
+        subplot(subplot_size,subplot_size,p);
+        histogram(behdata.idle_reaction_time_in_ms(oktrials),50);
+        title(['decision time - pp ', num2str(pp2do(p))]);  
 
-%% basic data checks, each pp in own subplot
-if plot_individuals
-    figure(1); subplot(5,5,p); hist(behdata.response_time_in_ms(oktrials),50);            title(['response time - pp ', num2str(pp2do(p))]);  xlim([0 1500]);
-    figure(2); subplot(5,5,p); hist(behdata.idle_reaction_time_in_ms(oktrials),50);       title(['decision time - pp ', num2str(pp2do(p))]);  
-    figure(3); subplot(5,5,p); hist(behdata.idle_reaction_time_in_ms(oktrials),50);       title(['decision time - pp ', num2str(pp2do(p))]);  xlim([0 2000]);
-    figure(4); subplot(5,5,p); hist(behdata.signed_difference(oktrials),50);              title(['signed error - pp ', num2str(pp2do(p))]);   xlim([-100 100]);
-    figure(5); subplot(5,5,p); hist(behdata.absolute_difference(oktrials),50);            title(['error - pp ', num2str(pp2do(p))]);          xlim([0 100]);
+        figure(figure_nr);
+        figure_nr = figure_nr+1;
+        subplot(subplot_size,subplot_size,p);
+        histogram(behdata.signed_difference(oktrials),50);
+        title(['signed error - pp ', num2str(pp2do(p))]);
+        xlim([-100 100]);
+
+        figure(figure_nr);
+        figure_nr = figure_nr+1;
+        subplot(subplot_size,subplot_size,p);
+        histogram(behdata.absolute_difference(oktrials),50);
+        title(['error - pp ', num2str(pp2do(p))]);
+        xlim([0 100]);
+        
+    end
+    
+    %% trial selections
+    location_probe_trials = ismember(behdata.block_type, {'location_probe'});
+    colour_probe_trials = ismember(behdata.block_type, {'colour_probe'});
+
+    location_cue_trials = ismember(behdata.cue_form, {'location_cue'});
+    colour_cue_trials = ismember(behdata.cue_form, {'colour_cue'});
+
+    congruent_trials = ismember(behdata.trial_condition, {'congruent'});
+    incongruent_trials = ismember(behdata.trial_condition, {'incongruent'});
+
+    left_target_trials = ismember(behdata.target_bar, {'left'});
+    right_target_trials = ismember(behdata.target_bar, {'right'});
+    
+    %% extract data of interest
+    loc_probe_decisiontime(p,1) = mean(behdata.idle_reaction_time_in_ms(congruent_trials&location_cue_trials&location_probe_trials&oktrials));
+    loc_probe_decisiontime(p,2) = mean(behdata.idle_reaction_time_in_ms(incongruent_trials&location_cue_trials&location_probe_trials&oktrials));
+    loc_probe_decisiontime(p,3) = mean(behdata.idle_reaction_time_in_ms(congruent_trials&colour_cue_trials&location_probe_trials&oktrials));
+    loc_probe_decisiontime(p,4) = mean(behdata.idle_reaction_time_in_ms(incongruent_trials&colour_cue_trials&location_probe_trials&oktrials));
+    loc_probe_decisiontime(p,5) = mean(behdata.idle_reaction_time_in_ms(location_probe_trials&oktrials));
+
+    loc_probe_error(p,1) = mean(behdata.absolute_difference(congruent_trials&location_cue_trials&location_probe_trials&oktrials));
+    loc_probe_error(p,2) = mean(behdata.absolute_difference(incongruent_trials&location_cue_trials&location_probe_trials&oktrials));
+    loc_probe_error(p,3) = mean(behdata.absolute_difference(congruent_trials&colour_cue_trials&location_probe_trials&oktrials));
+    loc_probe_error(p,4) = mean(behdata.absolute_difference(incongruent_trials&colour_cue_trials&location_probe_trials&oktrials));
+    loc_probe_error(p,5) = mean(behdata.absolute_difference(location_probe_trials&oktrials));
+
+    col_probe_decisiontime(p,1) = mean(behdata.idle_reaction_time_in_ms(congruent_trials&location_cue_trials&colour_probe_trials&oktrials));
+    col_probe_decisiontime(p,2) = mean(behdata.idle_reaction_time_in_ms(incongruent_trials&location_cue_trials&colour_probe_trials&oktrials));
+    col_probe_decisiontime(p,3) = mean(behdata.idle_reaction_time_in_ms(congruent_trials&colour_cue_trials&colour_probe_trials&oktrials));
+    col_probe_decisiontime(p,4) = mean(behdata.idle_reaction_time_in_ms(incongruent_trials&colour_cue_trials&colour_probe_trials&oktrials));
+    col_probe_decisiontime(p,5) = mean(behdata.idle_reaction_time_in_ms(location_probe_trials&oktrials));
+
+    col_probe_error(p,1) = mean(behdata.absolute_difference(congruent_trials&location_cue_trials&colour_probe_trials&oktrials));
+    col_probe_error(p,2) = mean(behdata.absolute_difference(incongruent_trials&location_cue_trials&colour_probe_trials&oktrials));
+    col_probe_error(p,3) = mean(behdata.absolute_difference(congruent_trials&colour_cue_trials&colour_probe_trials&oktrials));
+    col_probe_error(p,4) = mean(behdata.absolute_difference(incongruent_trials&colour_cue_trials&colour_probe_trials&oktrials));
+    col_probe_error(p,5) = mean(behdata.absolute_difference(location_probe_trials&oktrials));
+
+    %% calculate aggregates of interest
+    congruency_labels = {"location probe", "colour probe"};
+
+    congruency_dt_effect(p,1) = loc_probe_decisiontime(p,2) - loc_probe_decisiontime(p,1);
+    congruency_dt_effect(p,2) = loc_probe_decisiontime(p,4) - loc_probe_decisiontime(p,3);
+    congruency_dt_effect(p,3) = col_probe_decisiontime(p,2) - col_probe_decisiontime(p,1);
+    congruency_dt_effect(p,4) = col_probe_decisiontime(p,4) - col_probe_decisiontime(p,3);
+
+    congruency_er_effect(p,1) = loc_probe_error(p,2) - loc_probe_error(p,1);
+    congruency_er_effect(p,2) = loc_probe_error(p,4) - loc_probe_error(p,3);
+    congruency_er_effect(p,3) = col_probe_error(p,2) - col_probe_error(p,1);
+    congruency_er_effect(p,4) = col_probe_error(p,4) - col_probe_error(p,3);
+
+    %% plot individuals
+    dt_lim = 1200;
+    er_lim = 30;
+
+    if plot_individuals
+        figure(figure_nr);
+        figure_nr = figure_nr+1;
+        subplot(subplot_size,subplot_size,p);
+        bar([1,2], [loc_probe_decisiontime(p,1:2); loc_probe_decisiontime(p,3:4)]); 
+        xticks([1,2]);
+        xticklabels(labels);
+        ylim([0 dt_lim]);
+        legend("congruent", "incongruent");
+        title(['decision time, location probe - pp ', num2str(pp)]);
+
+        figure(figure_nr);
+        figure_nr = figure_nr+1;
+        subplot(subplot_size,subplot_size,p);
+        bar([1,2], [loc_probe_error(p,1:2); loc_probe_error(p,3:4)]);
+        xticks([1,2]);
+        xticklabels(labels);
+        ylim([0 er_lim]);
+        legend("congruent", "incongruent");
+        title(['error, location probe - pp ', num2str(pp)]);
+
+        figure(figure_nr);
+        figure_nr = figure_nr+1;
+        subplot(subplot_size,subplot_size,p);
+        bar([1,2], [col_probe_decisiontime(p,1:2); col_probe_decisiontime(p,3:4)]);
+        xticks([1,2]);
+        xticklabels(labels);
+        ylim([0 dt_lim]);
+        legend("congruent", "incongruent");
+        title(['decision time, colour probe - pp ', num2str(pp)]);
+
+        figure(figure_nr);
+        figure_nr = figure_nr+1;
+        subplot(subplot_size,subplot_size,p);
+        bar([1,2], [col_probe_error(p,1:2); col_probe_error(p,3:4)]);
+        xticks([1,2]);
+        xticklabels(labels);
+        ylim([0 er_lim]);
+        legend("congruent", "incongruent");
+        title(['error, colour probe - pp ', num2str(pp)]);
+
+        figure(figure_nr);
+        figure_nr = figure_nr+1;
+        subplot(subplot_size,subplot_size,p);
+        bar([1,2], [congruency_dt_effect(p,1:2); congruency_dt_effect(p,3:4)]);
+        xticks([1,2]);
+        xticklabels(congruency_labels);
+        ylim([0 200]);
+        legend("location cue", "colour cue");
+        title(['decision time effect - pp ', num2str(pp)]);
+
+        figure(figure_nr);
+        figure_nr = figure_nr+1;
+        subplot(subplot_size,subplot_size,p);
+        bar([1,2], [congruency_er_effect(p,1:2); congruency_er_effect(p,3:4)]);
+        xticks([1,2]);
+        xticklabels(congruency_labels);
+        ylim([0 10]);
+        legend("location cue", "colour cue");
+        title(['error effect - pp ', num2str(pp)]);
+
+    end
 end
 
-%% trial selections
-congruent_trials = ismember(behdata.trial_condition, {'congruent'});
-incongruent_trials = ismember(behdata.trial_condition, {'incongruent'});
-
-%% mixture models of target error
-% get non-target orientations
-non_target_orientations = zeros(size(behdata.trial_number));
-right_target_trials = find(strcmp(behdata.target_bar,'right'));
-left_target_trials = find(strcmp(behdata.target_bar,'left'));
-non_target_orientations(right_target_trials) = behdata.left_orientation(right_target_trials);
-non_target_orientations(left_target_trials) = behdata.right_orientation(left_target_trials);
-
-% turn all orientations to radians...
-non_target_orientations = (non_target_orientations/90*pi);
-behdata.report_orientation = behdata.report_orientation/90*pi;
-behdata.target_orientation = behdata.target_orientation/90*pi;
-
-% create model for each condition
-conditions = [1 : size(labels, 2)];
-
-for condition = conditions
-    [B, LL] = mixtureFit(behdata.report_orientation(eval(sprintf('%s_trials', labels{condition}))&oktrials), behdata.target_orientation(eval(sprintf('%s_trials', labels{condition}))&oktrials), non_target_orientations(eval(sprintf('%s_trials', labels{condition}))&oktrials));
-    precision(p, condition) = B(1);
-    pT(p, condition) = B(2);
-    pNT(p, condition) = B(3);
-    pU(p, condition) = B(4);
-end
-
-%% extract data of interest
-decisiontime(p,1) = mean(behdata.idle_reaction_time_in_ms(congruent_trials&oktrials));
-decisiontime(p,2) = mean(behdata.idle_reaction_time_in_ms(incongruent_trials&oktrials));
-decisiontime(p,3) = mean(behdata.idle_reaction_time_in_ms(oktrials));
-
-decisiontime_std(p,1) = std(behdata.idle_reaction_time_in_ms(congruent_trials&oktrials));
-decisiontime_std(p,2) = std(behdata.idle_reaction_time_in_ms(incongruent_trials&oktrials));
-decisiontime_std(p,3) = std(behdata.idle_reaction_time_in_ms(oktrials));
-
-error(p,1) = mean(behdata.absolute_difference(congruent_trials&oktrials));
-error(p,2) = mean(behdata.absolute_difference(incongruent_trials&oktrials));
-error(p,3) = mean(behdata.absolute_difference(oktrials));
-
-overall_dt(p) = mean([behdata.idle_reaction_time_in_ms]);
-overall_error(p) = mean([behdata.absolute_difference]);
-ppnum(p) = pp;
-
-decisiontimes_meansubtracted = decisiontime(:,1:3) - decisiontime(:, 4);
-error_meansubtracted = error(:,1:3) - error(:, 4);
-
-%% calculate capture effect on RT and error and save significance
-[h, pvalue, ci, stats] = ttest2(behdata.idle_reaction_time_in_ms(congruent_trials&oktrials), behdata.idle_reaction_time_in_ms(incongruent_trials&oktrials));
-capture_rt(p,1) = pvalue;
-capture_rt(p,2) = h;
-capture_rt(p,3) = decisiontime(p,3) - decisiontime(p,1);
-
-[h, pvalue, ci, stats] = ttest2(behdata.absolute_difference(congruent_trials&oktrials), behdata.absolute_difference(incongruent_trials&oktrials));
-capture_error(p,1) = pvalue;
-capture_error(p,2) = h;
-capture_error(p,3) = error(p,3) - error(p,1);
-
-capture_effectsize(p, 1) = capture_rt(p,3);
-capture_effectsize(p, 2) = capture_error(p,3);
-%% calculate proportion of wrong-key uses
-correct_key_trials = strcmp(behdata.correct_key, 'True');
-wrong_key_trials = strcmp(behdata.correct_key, 'False');
-different_key_trials = (behdata.right_orientation > 0) ~= (behdata.left_orientation > 0);
-
-for condition = conditions
-    total_correct(p, condition) = sum(different_key_trials&correct_key_trials&oktrials&eval(sprintf('%s_trials', labels{condition})));
-    total_wrong(p, condition) = sum(different_key_trials&wrong_key_trials&oktrials&eval(sprintf('%s_trials', labels{condition})));
-    proportion_correct(p, condition) = total_correct(p, condition)/sum(different_key_trials&oktrials&eval(sprintf('%s_trials', labels{condition})));
-    proportion_wrong(p, condition) = total_wrong(p, condition)/sum(different_key_trials&oktrials&eval(sprintf('%s_trials', labels{condition})));
-end
-
-total_correct(p, 4) = sum(different_key_trials&correct_key_trials&oktrials);
-total_wrong(p, 4) = sum(different_key_trials&wrong_key_trials&oktrials);
-proportion_correct(p, 4) = total_correct(p, 4)/sum(different_key_trials&oktrials);
-proportion_wrong(p, 4) = total_wrong(p, 4)/sum(different_key_trials&oktrials);
-
-total_correct_capture(p, 1) = sum(different_key_trials&correct_key_trials&oktrials&congruent_trials);
-total_correct_capture(p, 3) = sum(different_key_trials&wrong_key_trials&oktrials&incongruent_trials);
-total_correct_capture(p, 4) = sum(different_key_trials&correct_key_trials&oktrials&congruent_trials) + sum(different_key_trials&wrong_key_trials&oktrials&incongruent_trials);
-proportion_correct_capture(p, 1) = total_correct_capture(p, 1)/sum(different_key_trials&oktrials&congruent_trials);
-proportion_correct_capture(p, 3) = total_correct_capture(p, 3)/sum(different_key_trials&oktrials&incongruent_trials);
-proportion_correct_capture(p, 4) = total_correct_capture(p, 4)/sum(different_key_trials&oktrials);
-
-%% plot
-if plot_individuals
-    figure(6); subplot(5,5,p); bar([1,2,3], decisiontime(p,1:3));  xticks([1,2,3]); xticklabels(labels); ylim([0 1300]); title(['decision time - pp', num2str(pp)]);
-    figure(7); subplot(5,5,p); bar([1,2,3], error(p,1:3));         xticks([1,2,3]); xticklabels(labels); ylim([0 25]);    title(['error - pp', num2str(pp)]);
-end
-end
-
-%% calculate relative effect sizes per pp
-capture_effectsize(:,3) = (capture_effectsize(:,1)/max(capture_effectsize(:,1)) + capture_effectsize(:,2)/max(capture_effectsize(:,2))) / 2;
-
-%% display percentage OK
-if display_percentageok
-    percentageok
-end
 
 %% all pp plot
 if plot_averages
 
     figure; 
-    subplot(3,1,1); bar(ppnum, overall_dt);     title('overall decision time'); ylim([0 900]);  xlabel('pp #');
-    subplot(3,1,2); bar(ppnum, overall_error);  title('overall error');         ylim([0 25]);   xlabel('pp #');
+    subplot(3,1,1); bar(ppnum, loc_probe_overall_dt);     title('overall decision time'); ylim([0 900]);  xlabel('pp #');
+    subplot(3,1,2); bar(ppnum, location_probe_overall_error);  title('overall error');         ylim([0 25]);   xlabel('pp #');
     subplot(3,1,3); bar(ppnum, percentageok);  title('percentage ok trials');   ylim([90 100]); xlabel('pp #');
     
     %% grand average bar graphs of data as function of condition
 
     figure;  
     subplot(1,2,1); hold on;
-    b1 = bar([1], [mean(decisiontime(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:));
-    b2 = bar([2], [mean(decisiontime(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:));
+    b1 = bar([1], [mean(loc_probe_decisiontime(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:));
+    b2 = bar([2], [mean(loc_probe_decisiontime(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:));
     title('Decision time')
     ylim([0 1300]);
-    errorbar([1], [mean(decisiontime(:,1))],[std(decisiontime(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(1,:));
-    errorbar([2], [mean(decisiontime(:,2))],[std(decisiontime(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(2,:));
+    errorbar([1], [mean(loc_probe_decisiontime(:,1))],[std(loc_probe_decisiontime(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(1,:));
+    errorbar([2], [mean(loc_probe_decisiontime(:,2))],[std(loc_probe_decisiontime(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(2,:));
     % for i = [1 : length(decisiontime)]
     %     plot([1,2,3], [decisiontime(:,1:3)]', '-o');
     % end
-    plot([1,2,3], [decisiontime(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
+    plot([1,2,3], [loc_probe_decisiontime(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
     xticks([1,2,3]); xticklabels(labels);
     xlim([0.2 3.8]);
     ylabel('Decision time (ms)');
@@ -203,15 +217,15 @@ if plot_averages
     fontsize(23, "points");
     
     subplot(1,2,2); hold on;
-    b1 = bar([1], [mean(error(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:));
-    b2 = bar([2], [mean(error(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:));
-    errorbar([1], [mean(error(:,1))],[std(error(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(1,:));
-    errorbar([2], [mean(error(:,2))],[std(error(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(2,:));
+    b1 = bar([1], [mean(loc_probe_error(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:));
+    b2 = bar([2], [mean(loc_probe_error(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:));
+    errorbar([1], [mean(loc_probe_error(:,1))],[std(loc_probe_error(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(1,:));
+    errorbar([2], [mean(loc_probe_error(:,2))],[std(loc_probe_error(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(2,:));
     %     plot([1,2,3], [error(:,1:3)]', '-o');
     % end
     title('Reproduction error')
     ylim([0 27])
-    plot([1,2,3], [error(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
+    plot([1,2,3], [loc_probe_error(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
     xticks([1,2,3]); xticklabels(labels);
     xlim([0.2 3.8]);
     ylabel('Error (degrees)');
@@ -220,15 +234,15 @@ if plot_averages
     %% grand average bar graphs of data as function of condition - with mean subtraction per participant
     figure;
     subplot(1,2,1); hold on;
-    b1 = bar([1], [mean(decisiontimes_meansubtracted(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:));
-    b2 = bar([2], [mean(decisiontimes_meansubtracted(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:));
-    errorbar([1], [mean(decisiontimes_meansubtracted(:,1))],[std(decisiontimes_meansubtracted(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(1,:));
-    errorbar([2], [mean(decisiontimes_meansubtracted(:,2))],[std(decisiontimes_meansubtracted(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(2,:));
+    b1 = bar([1], [mean(location_probe_decisiontimes_meansubtracted(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:));
+    b2 = bar([2], [mean(location_probe_decisiontimes_meansubtracted(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:));
+    errorbar([1], [mean(location_probe_decisiontimes_meansubtracted(:,1))],[std(location_probe_decisiontimes_meansubtracted(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(1,:));
+    errorbar([2], [mean(location_probe_decisiontimes_meansubtracted(:,2))],[std(location_probe_decisiontimes_meansubtracted(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(2,:));
     % for i = [1 : length(decisiontimes_meansubtracted)]
     %     plot([1,2,3], [decisiontimes_meansubtracted(:,1:3)]', '-o');
     % end
     title('Decision time')
-    plot([1,2,3], [decisiontimes_meansubtracted(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
+    plot([1,2,3], [location_probe_decisiontimes_meansubtracted(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
     xticks([1,2,3]); xticklabels(labels);
     xlim([0.2 3.8]);
     ylim([-70 60]);
@@ -237,128 +251,21 @@ if plot_averages
     fontsize(23, "points");
 
     subplot(1,2,2); hold on;
-    b1 = bar([1], [mean(error_meansubtracted(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:));
-    b2 = bar([2], [mean(error_meansubtracted(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:));
-    errorbar([1], [mean(error_meansubtracted(:,1))],[std(error_meansubtracted(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(1,:));
-    errorbar([2], [mean(error_meansubtracted(:,2))],[std(error_meansubtracted(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(2,:));
+    b1 = bar([1], [mean(location_probe_error_meansubtracted(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:));
+    b2 = bar([2], [mean(location_probe_error_meansubtracted(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:));
+    errorbar([1], [mean(location_probe_error_meansubtracted(:,1))],[std(location_probe_error_meansubtracted(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(1,:));
+    errorbar([2], [mean(location_probe_error_meansubtracted(:,2))],[std(location_probe_error_meansubtracted(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(2,:));
     % for i = [1 : length(error_meansubtracted)]
     %     plot([1,2,3], [error_meansubtracted(:,1:3)]', '-o');
     % end
     title('Reproduction error')
     ylim([-2 2]);
-    plot([1,2,3], [error_meansubtracted(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
+    plot([1,2,3], [location_probe_error_meansubtracted(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
     xticks([1,2,3]); xticklabels(labels);
     xlim([0.2 3.8]);
     ylabel('Error (degrees)');  
     fontsize(23, "points");
-
-    %% grand average bar graphs for mixture model data
-    figure;
-    set(gcf,'position',[0,0, 1100,1600])
-
-    % precision
-    subplot(2,2,1); hold on;
-    title('Precision');
-    bar([1], [mean(precision(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:)); 
-    bar([2], [mean(precision(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:)); 
-    errorbar([1], [mean(precision(:,1))], [std(precision(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'CapSize',7, 'Color', dark_colours(1,:));
-    errorbar([2], [mean(precision(:,2))], [std(precision(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'CapSize',7, 'Color', dark_colours(2,:));
-    % for i = [1 : length(precision)]
-    %     plot([1,2,3], [precision(:,1:3)]', '-o');
-    % end
-    plot([1,2], [precision(:,1:2)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
-    xticks([1,2]); xticklabels(labels);
-    % yticklabels([0, 5, 10, 15], 'FontSize',10);
-    y1 = ylabel('Precision (k)');
-    xlim([0.2 3.8]);
-
-
-    % pT
-    subplot(2,2,2); hold on;
-    title('Target response');
-    bar([1], [mean(pT(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:)); 
-    bar([2], [mean(pT(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:)); 
-    errorbar([1], [mean(pT(:,1))], [std(pT(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'CapSize',7, 'Color', dark_colours(1,:));
-    errorbar([2], [mean(pT(:,2))], [std(pT(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'CapSize',7,'Color', dark_colours(2,:));
-    ylim([0.6 1]);
-    % for i = [1 : length(pT)]
-    %     plot([1,2,3], [pT(:,1:3)]', '-o');
-    % end
-    plot([1,2,3], [pT(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
-    xticks([1,2,3]); xticklabels(labels);
-    xlim([0.2 3.8]);
-    y2 = ylabel('Probability');
-
     
-    % pNT
-    subplot(2,2,3); hold on;
-    title('Non-target response');
-    bar([1], [mean(pNT(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:)); 
-    bar([2], [mean(pNT(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:)); 
-    errorbar([1], [mean(pNT(:,1))], [std(pNT(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'CapSize',7, 'Color', dark_colours(1,:));
-    errorbar([2], [mean(pNT(:,2))], [std(pNT(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'CapSize',7, 'Color', dark_colours(2,:));
-    ylim([0 0.2]);
-    % for i = [1 : length(pNT)]
-    %     plot([1,2,3], [pNT(:,1:3)]', '-o');
-    % end
-    plot([1,2,3], [pNT(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
-    xticks([1,2,3]); xticklabels(labels);
-    xlim([0.2 3.8]);
-    y3 = ylabel('Probability');
-
-    % pU
-    subplot(2,2,4); hold on;
-    title('Random response');
-    bar([1], [mean(pU(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:)); 
-    bar([2], [mean(pU(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:)); 
-    errorbar([1], [mean(pU(:,1))], [std(pU(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'CapSize',7, 'Color', dark_colours(1,:));
-    errorbar([2], [mean(pU(:,2))], [std(pU(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'CapSize',7, 'Color', dark_colours(2,:));
-    ylim([0 0.2]);
-    % for i = [1 : length(pU)]
-    %     plot([1,2,3], [pU(:,1:3)]', '-o');
-    % end
-    plot([1,2,3], [pU(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
-    xticks([1,2,3]); xticklabels(labels);
-    xlim([0.2 3.8]);
-    y4 = ylabel('Probability');
-    
-    fontsize(27, "points");
-
-    % y1.FontSize = 30;
-    % y2.FontSize = 22;
-    % y3.FontSize = 22;
-    % y4.FontSize = 22;
-    %% (grand) average bar graph for wrong-key uses
-    % figure;
-    % subplot(1,2,1); hold on;
-    % bar([1,2,3], [mean(proportion_correct(:,1:3))], FaceColor='w');
-    % title('Proportion of correct key presses'); ylim([0.7 1]);
-    % errorbar([1,2,3], [mean(proportion_correct(:,1:3))], [std(proportion_correct(:,1:3)) ./ sqrt(p)], '.k', 'LineWidth', 2);
-    % % for i = [1 : length(proportion_correct(:,1:3))]
-    % %     plot([1,2,3], [proportion_correct(:,1:3)]', '-o');
-    % % end
-    % plot([1,2,3], [proportion_correct(:,1:3)]', 'Color', [0.5 0.5 0.5]);
-    % xticks([1,2,3]); xticklabels(labels);
-    % ylabel('Proportion correct key presses');
-    % 
-    
-    figure;
-    hold on;
-    title('Incorrect key usage'); ylim([0 0.3]);
-    bar([1], [mean(proportion_wrong(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:)); 
-    bar([2], [mean(proportion_wrong(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:)); 
-    errorbar([1], [mean(proportion_wrong(:,1))], [std(proportion_wrong(:,1)) ./ sqrt(p)], 'LineWidth', 4, 'CapSize',8, 'Color', dark_colours(1,:));
-    errorbar([2], [mean(proportion_wrong(:,2))], [std(proportion_wrong(:,2)) ./ sqrt(p)], 'LineWidth', 4, 'CapSize',8, 'Color', dark_colours(2,:));
-    % for i = [1 : length(proportion_wrong(:,1:3))]
-    %     plot([1,2,3], [proportion_wrong(:,1:3)]', '-o');
-    % end
-    plot([1,2,3], [proportion_wrong(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
-    xticks([1,2,3]); xticklabels(labels);
-    xlim([0.2 3.8]);
-    set(gcf,'position',[0,0, 740,1600])
-    fontsize(30, "points");
-    ylabel('Proportion of wrong key presses');
-
 end
 
 %% see performance per block (for fun for participants)
