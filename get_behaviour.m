@@ -5,8 +5,8 @@ clc
 %% set parameters and loops
 see_performance = 0;
 display_percentageok = 1;
-plot_individuals = 1;
-plot_averages = 0;
+plot_individuals = 0;
+plot_averages = 1;
 
 pp2do = [1:4]; 
 p = 0;
@@ -82,6 +82,9 @@ for pp = pp2do
     right_target_trials = ismember(behdata.target_bar, {'right'});
     
     %% extract data of interest
+    overall_dt(p,1) = mean(behdata.idle_reaction_time_in_ms(oktrials));
+    overall_error(p,1) = mean(behdata.absolute_difference(oktrials));
+
     loc_probe_decisiontime(p,1) = mean(behdata.idle_reaction_time_in_ms(congruent_trials&location_cue_trials&location_probe_trials&oktrials));
     loc_probe_decisiontime(p,2) = mean(behdata.idle_reaction_time_in_ms(incongruent_trials&location_cue_trials&location_probe_trials&oktrials));
     loc_probe_decisiontime(p,3) = mean(behdata.idle_reaction_time_in_ms(congruent_trials&colour_cue_trials&location_probe_trials&oktrials));
@@ -192,80 +195,145 @@ end
 if plot_averages
 
     figure; 
-    subplot(3,1,1); bar(ppnum, loc_probe_overall_dt);     title('overall decision time'); ylim([0 900]);  xlabel('pp #');
-    subplot(3,1,2); bar(ppnum, location_probe_overall_error);  title('overall error');         ylim([0 25]);   xlabel('pp #');
-    subplot(3,1,3); bar(ppnum, percentageok);  title('percentage ok trials');   ylim([90 100]); xlabel('pp #');
+    subplot(3,1,1);
+    bar(ppnum, overall_dt(:,1));
+    title('overall decision time');
+    ylim([0 900]);
+    xlabel('pp #');
+
+    subplot(3,1,2);
+    bar(ppnum, overall_error(:,1));
+    title('overall error');
+    ylim([0 25]);
+    xlabel('pp #');
+
+    subplot(3,1,3);
+    bar(ppnum, percentageok);
+    title('percentage ok trials');
+    ylim([90 100]);
+    xlabel('pp #');
     
     %% grand average bar graphs of data as function of condition
+    figure; 
+    hold on
+    bar([1,2], [mean(loc_probe_decisiontime(:,1:2)); mean(loc_probe_decisiontime(:,3:4))]);
+    % add errorbars
+    ngroups = 2;
+    nbars_per_group = 2;
+    offset = min(0.8, nbars/(nbars + 1.5)) / 5;
+    for i = 1:ngroups
+        x(i*2-1) = i - offset;
+        x(i*2) = i + offset;
+    end
+    for i = 1:ngroups*nbars_per_group
+        errorbar(x(i), mean(loc_probe_decisiontime(:,i)), std(loc_probe_decisiontime(:,i)) ./ sqrt(p), "black");
+    end
+    xticks([1,2]);
+    xticklabels(labels);
+    ylim([0 dt_lim]);
+    legend("congruent", "incongruent");
+    title(['decision time, location probe - averaged']);
 
-    figure;  
-    subplot(1,2,1); hold on;
-    b1 = bar([1], [mean(loc_probe_decisiontime(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:));
-    b2 = bar([2], [mean(loc_probe_decisiontime(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:));
-    title('Decision time')
-    ylim([0 1300]);
-    errorbar([1], [mean(loc_probe_decisiontime(:,1))],[std(loc_probe_decisiontime(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(1,:));
-    errorbar([2], [mean(loc_probe_decisiontime(:,2))],[std(loc_probe_decisiontime(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(2,:));
-    % for i = [1 : length(decisiontime)]
-    %     plot([1,2,3], [decisiontime(:,1:3)]', '-o');
-    % end
-    plot([1,2,3], [loc_probe_decisiontime(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
-    xticks([1,2,3]); xticklabels(labels);
-    xlim([0.2 3.8]);
-    ylabel('Decision time (ms)');
-    set(gcf,'position',[0,0, 1080,1600])
-    fontsize(23, "points");
-    
-    subplot(1,2,2); hold on;
-    b1 = bar([1], [mean(loc_probe_error(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:));
-    b2 = bar([2], [mean(loc_probe_error(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:));
-    errorbar([1], [mean(loc_probe_error(:,1))],[std(loc_probe_error(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(1,:));
-    errorbar([2], [mean(loc_probe_error(:,2))],[std(loc_probe_error(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(2,:));
-    %     plot([1,2,3], [error(:,1:3)]', '-o');
-    % end
-    title('Reproduction error')
-    ylim([0 27])
-    plot([1,2,3], [loc_probe_error(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
-    xticks([1,2,3]); xticklabels(labels);
-    xlim([0.2 3.8]);
-    ylabel('Error (degrees)');
-    fontsize(23, "points");
-    
-    %% grand average bar graphs of data as function of condition - with mean subtraction per participant
+    figure; 
+    hold on
+    bar([1,2], [mean(loc_probe_error(:,1:2)); mean(loc_probe_error(:,3:4))]);
+   % add errorbars
+    ngroups = 2;
+    nbars_per_group = 2;
+    offset = min(0.8, nbars/(nbars + 1.5)) / 5;
+    for i = 1:ngroups
+        x(i*2-1) = i - offset;
+        x(i*2) = i + offset;
+    end
+    for i = 1:ngroups*nbars_per_group
+        errorbar(x(i), mean(loc_probe_error(:,i)), std(loc_probe_error(:,i)) ./ sqrt(p), "black");
+    end
+    xticks([1,2]);
+    xticklabels(labels);
+    ylim([0 er_lim]);
+    legend("congruent", "incongruent");
+    title(['error, location probe - averaged']);
+
+    figure; 
+    hold on
+    bar([1,2], [mean(col_probe_decisiontime(:,1:2)); mean(col_probe_decisiontime(:,3:4))]);
+    % add errorbars
+    ngroups = 2;
+    nbars_per_group = 2;
+    offset = min(0.8, nbars/(nbars + 1.5)) / 5;
+    for i = 1:ngroups
+        x(i*2-1) = i - offset;
+        x(i*2) = i + offset;
+    end
+    for i = 1:ngroups*nbars_per_group
+        errorbar(x(i), mean(col_probe_decisiontime(:,i)), std(col_probe_decisiontime(:,i)) ./ sqrt(p), "black");
+    end
+    xticks([1,2]);
+    xticklabels(labels);
+    ylim([0 dt_lim]);
+    legend("congruent", "incongruent");
+    title(['decision time, colour probe - averaged']);
+
     figure;
-    subplot(1,2,1); hold on;
-    b1 = bar([1], [mean(location_probe_decisiontimes_meansubtracted(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:));
-    b2 = bar([2], [mean(location_probe_decisiontimes_meansubtracted(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:));
-    errorbar([1], [mean(location_probe_decisiontimes_meansubtracted(:,1))],[std(location_probe_decisiontimes_meansubtracted(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(1,:));
-    errorbar([2], [mean(location_probe_decisiontimes_meansubtracted(:,2))],[std(location_probe_decisiontimes_meansubtracted(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(2,:));
-    % for i = [1 : length(decisiontimes_meansubtracted)]
-    %     plot([1,2,3], [decisiontimes_meansubtracted(:,1:3)]', '-o');
-    % end
-    title('Decision time')
-    plot([1,2,3], [location_probe_decisiontimes_meansubtracted(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
-    xticks([1,2,3]); xticklabels(labels);
-    xlim([0.2 3.8]);
-    ylim([-70 60]);
-    ylabel('Decision time (ms)');
-    set(gcf,'position',[0,0, 1080,1600])
-    fontsize(23, "points");
+    hold on
+    bar([1,2], [mean(col_probe_error(:,1:2)); mean(col_probe_error(:,3:4))]);
+    % add errorbars
+    ngroups = 2;
+    nbars_per_group = 2;
+    offset = min(0.8, nbars/(nbars + 1.5)) / 5;
+    for i = 1:ngroups
+        x(i*2-1) = i - offset;
+        x(i*2) = i + offset;
+    end
+    for i = 1:ngroups*nbars_per_group
+        errorbar(x(i), mean(col_probe_error(:,i)), std(col_probe_error(:,i)) ./ sqrt(p), "black");
+    end
+    xticks([1,2]);
+    xticklabels(labels);
+    ylim([0 er_lim]);
+    legend("congruent", "incongruent");
+    title(['error, colour probe - averaged']);
 
-    subplot(1,2,2); hold on;
-    b1 = bar([1], [mean(location_probe_error_meansubtracted(:,1))], bar_size, FaceColor=colours(1,:), EdgeColor=colours(1,:));
-    b2 = bar([2], [mean(location_probe_error_meansubtracted(:,2))], bar_size, FaceColor=colours(2,:), EdgeColor=colours(2,:));
-    errorbar([1], [mean(location_probe_error_meansubtracted(:,1))],[std(location_probe_error_meansubtracted(:,1)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(1,:));
-    errorbar([2], [mean(location_probe_error_meansubtracted(:,2))],[std(location_probe_error_meansubtracted(:,2)) ./ sqrt(p)], 'LineWidth', 3, 'Color', dark_colours(2,:));
-    % for i = [1 : length(error_meansubtracted)]
-    %     plot([1,2,3], [error_meansubtracted(:,1:3)]', '-o');
-    % end
-    title('Reproduction error')
-    ylim([-2 2]);
-    plot([1,2,3], [location_probe_error_meansubtracted(:,1:3)]', 'Color', [0, 0, 0, 0.25], 'LineWidth', 1);
-    xticks([1,2,3]); xticklabels(labels);
-    xlim([0.2 3.8]);
-    ylabel('Error (degrees)');  
-    fontsize(23, "points");
-    
+    figure; 
+    hold on
+    bar([1,2], [mean(congruency_dt_effect(:,1:2)); mean(congruency_dt_effect(:,3:4))]);
+    % add errorbars
+    ngroups = 2;
+    nbars_per_group = 2;
+    offset = min(0.8, nbars/(nbars + 1.5)) / 5;
+    for i = 1:ngroups
+        x(i*2-1) = i - offset;
+        x(i*2) = i + offset;
+    end
+    for i = 1:ngroups*nbars_per_group
+        errorbar(x(i), mean(congruency_dt_effect(:,i)), std(congruency_dt_effect(:,i)) ./ sqrt(p), "black");
+    end
+    xticks([1,2]);
+    xticklabels(congruency_labels);
+    ylim([-65 185]);
+    legend("location cue", "colour cue");
+    title(['decision time effect - averaged']);
+
+    figure; 
+    hold on
+    bar([1,2], [mean(congruency_er_effect(:,1:2)); mean(congruency_er_effect(:,3:4))]);
+    % add errorbars
+    ngroups = 2;
+    nbars_per_group = 2;
+    offset = min(0.8, nbars/(nbars + 1.5)) / 5;
+    for i = 1:ngroups
+        x(i*2-1) = i - offset;
+        x(i*2) = i + offset;
+    end
+    for i = 1:ngroups*nbars_per_group
+        errorbar(x(i), mean(congruency_er_effect(:,i)), std(congruency_er_effect(:,i)) ./ sqrt(p), "black");
+    end
+    xticks([1,2]);
+    xticklabels(congruency_labels);
+    ylim([-1.5 3.5]);
+    legend("location cue", "colour cue");
+    title(['error effect - averaged']);
+     
 end
 
 %% see performance per block (for fun for participants)
