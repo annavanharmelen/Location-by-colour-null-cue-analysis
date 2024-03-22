@@ -220,7 +220,7 @@ if plot_averages
     % add errorbars
     ngroups = 2;
     nbars_per_group = 2;
-    offset = min(0.8, nbars/(nbars + 1.5)) / 5;
+    offset = min(0.8, nbars_per_group/(nbars_per_group + 1.5)) / 4;
     for i = 1:ngroups
         x(i*2-1) = i - offset;
         x(i*2) = i + offset;
@@ -240,7 +240,7 @@ if plot_averages
    % add errorbars
     ngroups = 2;
     nbars_per_group = 2;
-    offset = min(0.8, nbars/(nbars + 1.5)) / 5;
+    offset = min(0.8, nbars_per_group/(nbars_per_group + 1.5)) / 4;
     for i = 1:ngroups
         x(i*2-1) = i - offset;
         x(i*2) = i + offset;
@@ -260,7 +260,7 @@ if plot_averages
     % add errorbars
     ngroups = 2;
     nbars_per_group = 2;
-    offset = min(0.8, nbars/(nbars + 1.5)) / 5;
+    offset = min(0.8, nbars_per_group/(nbars_per_group + 1.5)) / 4;
     for i = 1:ngroups
         x(i*2-1) = i - offset;
         x(i*2) = i + offset;
@@ -280,7 +280,7 @@ if plot_averages
     % add errorbars
     ngroups = 2;
     nbars_per_group = 2;
-    offset = min(0.8, nbars/(nbars + 1.5)) / 5;
+    offset = min(0.8, nbars_per_group/(nbars_per_group + 1.5)) / 4;
     for i = 1:ngroups
         x(i*2-1) = i - offset;
         x(i*2) = i + offset;
@@ -300,7 +300,7 @@ if plot_averages
     % add errorbars
     ngroups = 2;
     nbars_per_group = 2;
-    offset = min(0.8, nbars/(nbars + 1.5)) / 5;
+    offset = min(0.8, nbars_per_group/(nbars_per_group + 1.5)) / 4;
     for i = 1:ngroups
         x(i*2-1) = i - offset;
         x(i*2) = i + offset;
@@ -320,7 +320,7 @@ if plot_averages
     % add errorbars
     ngroups = 2;
     nbars_per_group = 2;
-    offset = min(0.8, nbars/(nbars + 1.5)) / 5;
+    offset = min(0.8, nbars_per_group/(nbars_per_group + 1.5)) / 4;
     for i = 1:ngroups
         x(i*2-1) = i - offset;
         x(i*2) = i + offset;
