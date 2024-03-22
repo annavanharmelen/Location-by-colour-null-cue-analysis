@@ -20,30 +20,6 @@ labels = {'location cue', 'colour cue'};
 subplot_size = ceil(sqrt(size(pp2do, 2)));
 
 percentageok = zeros(size(pp2do));
-precision = zeros(size(pp2do, 2), 2);
-pT = zeros(size(pp2do, 2), 2);
-pNT = zeros(size(pp2do, 2), 2);
-pU = zeros(size(pp2do, 2), 2);
-decisiontime = zeros(size(pp2do, 2), 4);
-decisiontime_std = zeros(size(pp2do, 2), 4);
-error = zeros(size(pp2do, 2), 4);
-overall_dt = zeros(size(pp2do));
-overall_error = zeros(size(pp2do));
-capture_rt = zeros(size(pp2do, 2), 3);
-capture_error = zeros(size(pp2do, 2), 3);
-capture_effectsize = zeros(size(pp2do, 2), 3);
-ppnum = zeros(size(pp2do));
-total_correct = zeros(size(pp2do, 2), 4);
-total_wrong = zeros(size(pp2do, 2), 4);
-total_correct_capture = zeros(size(pp2do, 2), 4);
-proportion_correct = zeros(size(pp2do, 2), 4);
-proportion_wrong = zeros(size(pp2do, 2), 4);
-proportion_correct_capture = zeros(size(pp2do, 2), 4);
-
-
-overall_dt = zeros(size(pp2do));
-overall_error = zeros(size(pp2do));
-
 
 end
 
