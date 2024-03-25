@@ -4,12 +4,12 @@
 clear; clc; close all;
 
 %% set loops
-for pp      = [1];
+for pp      = [1:10];
 
 %% Set trig labels and epoch timings
-values2use  = 11:16; % capture-cue onset
-prestim     = -0.5; % 
-poststim    = 3; % until 3 s after
+values2use  = [21:29,210:216]; % capture-cue onset
+prestim     = -1.0; % 
+poststim    = 2.5; % until 3 s after
 
 %% participant-specific information
 param = getSubjParam(pp); 
