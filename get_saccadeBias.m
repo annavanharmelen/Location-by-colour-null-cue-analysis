@@ -4,10 +4,10 @@
 clear; clc; close all;
 
 %% parameters
-for pp = [1];
+for pp = [1:10];
 
     oneOrTwoD       = 1; oneOrTwoD_options = {'_1D','_2D'};
-    plotResults     = 1;
+    plotResults     = 0;
 
     %% load epoched data of this participant data
     param = getSubjParam(pp);
@@ -31,18 +31,24 @@ for pp = [1];
     tl.trial(:,2,:) = dva_y;
 
     %% selection vectors for conditions -- this is where it starts to become interesting!
-
     % cued item location
-    targL = ismember(tl.trialinfo(:,1), [11,13,15]);
-    targR = ismember(tl.trialinfo(:,1), [12,14,16]);
+    targL = ismember(tl.trialinfo(:,1), [21,23,25,27,29,211,213,215]);
+    targR = ismember(tl.trialinfo(:,1), [22,24,26,28,210,212,214,216]);
 
-    captureL = ismember(tl.trialinfo(:,1), [11,14]);
-    captureR = ismember(tl.trialinfo(:,1), [12,13]);
+    captureL = ismember(tl.trialinfo(:,1), [21,24,25,28,29,212,213,216]);
+    captureR = ismember(tl.trialinfo(:,1), [22,23,26,27,210,211,214,215]);
 
-    % distractor timing
-    congruent =     ismember(tl.trialinfo(:,1), [11,12]);
-    neutral =       ismember(tl.trialinfo(:,1), [15,16]);
-    incongruent  =  ismember(tl.trialinfo(:,1), [13,14]);
+    % congruency
+    congruent =     ismember(tl.trialinfo(:,1), [21,22,25,26,29,210,213,214]);
+    incongruent  =  ismember(tl.trialinfo(:,1), [23,24,27,28,211,212,215,216]);
+
+    % cue types
+    colour_cue = ismember(tl.trialinfo(:,1), [25,26,27,28,213,214,215,216]);
+    location_cue = ismember(tl.trialinfo(:,1), [21,22,23,24,29,210,211,212]);
+
+    % block types
+    colour_block = ismember(tl.trialinfo(:,1), [29, 210:216]);
+    location_block = ismember(tl.trialinfo(:,1), [21:28]);
 
     % channels
     chX = ismember(tl.label, 'eyeX');
@@ -70,27 +76,26 @@ for pp = [1];
     %% get relevant contrasts out
     saccade = [];
     saccade.time = times;
-    saccade.label = {'all','congruent','neutral','incongruent','congruent-vs-incongruent'};
+    saccade.label = {'all', 'colour_cue_all_blocks', 'location_cue_all_blocks', 'colour_cue_colour_blocks','location_cue_location_blocks','colour_cue_location_blocks','location_cue_colour_blocks'};
 
-    for selection = [1:4] % conditions.
-        if     selection == 1  sel = ones(size(congruent));
-        elseif selection == 2  sel = congruent;
-        elseif selection == 3  sel = neutral;
-        elseif selection == 4  sel = incongruent;
+    for selection = [1:7] % conditions.
+        if     selection == 1  sel = ones(size(colour_cue));
+            elseif selection == 2  sel = colour_cue;
+            elseif selection == 3  sel = location_cue;
+            elseif selection == 4  sel = colour_cue&colour_block;
+            elseif selection == 5  sel = location_cue&location_block;
+            elseif selection == 6  sel = colour_cue&location_block;
+            elseif selection == 7  sel = location_cue&colour_block;
         end
 
-        saccade.toward(selection,:) =  (mean(shiftsL(targL&sel,:)) + mean(shiftsR(targR&sel,:))) ./ 2;
-        saccade.away(selection,:)  =   (mean(shiftsL(targR&sel,:)) + mean(shiftsR(targL&sel,:))) ./ 2;
+        saccade.toward(selection,:) =  (mean(shiftsL(captureL&sel,:)) + mean(shiftsR(captureR&sel,:))) ./ 2;
+        saccade.away(selection,:)  =   (mean(shiftsL(captureR&sel,:)) + mean(shiftsR(captureL&sel,:))) ./ 2;
     end
 
     % add towardness field
     saccade.effect = (saccade.toward - saccade.away);
 
-    % add congruent vs. incongruent (essentially: how much toward distractor)
-    saccade.toward(end+1,:) = (saccade.toward([2],:) - saccade.toward([4],:)) ./ 2;
-    saccade.away(end+1,:)   = (saccade.away([2],:)   - saccade.away([4],:)) ./ 2;
-    saccade.effect(end+1,:) = (saccade.effect([2],:) - saccade.effect([4],:)) ./ 2;
-
+    
     %% smooth and turn to Hz
     integrationwindow = 100; % window over which to integrate saccade counts
     saccade.toward = smoothdata(saccade.toward,2,'movmean',integrationwindow)*1000; % *1000 to get to Hz, given 1000 samples per second.
@@ -99,9 +104,36 @@ for pp = [1];
 
     %% plot
     if plotResults
-        figure;    for sp = 1:5 subplot(2,3,sp); hold on; plot(saccade.time, saccade.toward(sp,:), 'r'); plot(saccade.time, saccade.away(sp,:), 'b'); title(saccade.label(sp)); legend({'toward','away'},'autoupdate', 'off'); plot([0,0], ylim, '--k');plot([1500,1500], ylim, '--k'); end
-        figure;    for sp = 1:5 subplot(2,3,sp); hold on; plot(saccade.time, saccade.effect(sp,:), 'k'); plot(xlim, [0,0], '--k');                    title(saccade.label(sp)); legend({'effect'},'autoupdate', 'off'); plot([0,0], ylim, '--k');plot([1500,1500], ylim, '--k'); end
-        figure;                                   hold on; plot(saccade.time, saccade.effect([1:5],:)); plot(xlim, [0,0], '--k'); legend(saccade.label([1:5]),'autoupdate', 'off'); plot([0,0], ylim, '--k');plot([1500,1500], ylim, '--k');
+        figure;
+        for sp = 1:7
+            subplot(2,4,sp);
+            hold on;
+            plot(saccade.time, saccade.toward(sp,:), 'r');
+            plot(saccade.time, saccade.away(sp,:), 'b');
+            title(saccade.label(sp));
+            legend({'toward','away'},'autoupdate', 'off');
+            plot([0,0], ylim, '--k');
+            plot([1500,1500], ylim, '--k');
+        end
+
+        figure;
+        for sp = 1:7
+            subplot(2,4,sp); hold on;
+            plot(saccade.time, saccade.effect(sp,:), 'k');
+            plot(xlim, [0,0], '--k');
+            title(saccade.label(sp));
+            legend({'effect'},'autoupdate', 'off');
+            plot([0,0], ylim, '--k');
+            plot([1500,1500], ylim, '--k');
+        end
+
+        figure;
+        hold on;
+        plot(saccade.time, saccade.effect([1:7],:));
+        plot(xlim, [0,0], '--k');
+        legend(saccade.label([1:7]),'autoupdate', 'off');
+        plot([0,0], ylim, '--k');
+        plot([1500,1500], ylim, '--k');
         drawnow;
     end
 
@@ -113,7 +145,7 @@ for pp = [1];
     saccadesize.dimord = 'chan_freq_time';
     saccadesize.freq = halfbin:0.1:7-halfbin; % shift sizes, as if "frequency axis" for time-frequency plot
     saccadesize.time = times;
-    saccadesize.label = {'all','congruent','neutral','incongruent','congruent-vs-incongruent'};
+    saccadesize.label = {'all', 'colour_cue_all_blocks', 'location_cue_all_blocks', 'colour_cue_colour_blocks','location_cue_location_blocks','colour_cue_location_blocks','location_cue_colour_blocks'};
 
     cnt = 0;
     for sz = saccadesize.freq;
@@ -123,25 +155,26 @@ for pp = [1];
         shiftsL = shiftsX<-sz+halfbin & shiftsX > -sz-halfbin; % left shifts within this range
         shiftsR = shiftsX>sz-halfbin  & shiftsX < sz+halfbin; % right shifts within this range
 
-        for selection = [1:4] % conditions.
-            if     selection == 1  sel = ones(size(congruent));
-            elseif selection == 2  sel = congruent;
-            elseif selection == 3  sel = neutral;
-            elseif selection == 4  sel = incongruent;
+    % add towardness field
+    saccade.effect = (saccade.toward - saccade.away);
+
+        for selection = [1:7] % conditions.
+            if     selection == 1  sel = ones(size(colour_cue));
+            elseif selection == 2  sel = colour_cue;
+            elseif selection == 3  sel = location_cue;
+            elseif selection == 4  sel = colour_cue&colour_block;
+            elseif selection == 5  sel = location_cue&location_block;
+            elseif selection == 6  sel = colour_cue&location_block;
+            elseif selection == 7  sel = location_cue&colour_block;
             end
 
-            saccadesize.toward(selection,cnt,:) = (mean(shiftsL(targL&sel,:)) + mean(shiftsR(targR&sel,:))) ./ 2;
-            saccadesize.away(selection,cnt,:) =   (mean(shiftsL(targR&sel,:)) + mean(shiftsR(targL&sel,:))) ./ 2;
+            saccadesize.toward(selection,cnt,:) = (mean(shiftsL(captureL&sel,:)) + mean(shiftsR(captureR&sel,:))) ./ 2;
+            saccadesize.away(selection,cnt,:) =   (mean(shiftsL(captureR&sel,:)) + mean(shiftsR(captureL&sel,:))) ./ 2;
         end
 
     end
     % add towardness field
     saccadesize.effect = (saccadesize.toward - saccadesize.away);
-
-    % add congruent vs. incongruent (essentially: how much toward distractor)
-    saccadesize.toward(end+1,:,:) = (saccadesize.toward([2],:,:) - saccadesize.toward([4],:,:)) ./ 2;
-    saccadesize.away(end+1,:,:)   = (saccadesize.away([2],:,:)   - saccadesize.away([4],:,:)) ./ 2;
-    saccadesize.effect(end+1,:,:) = (saccadesize.effect([2],:,:) - saccadesize.effect([4],:,:)) ./ 2;
 
     %% smooth and turn to Hz
     integrationwindow = 100; % window over which to integrate saccade counts
@@ -155,9 +188,9 @@ for pp = [1];
         cfg.figure = 'gcf';
         %cfg.zlim = [-0.01, 0.01];
         figure;
-        for chan = 1:5
+        for chan = 1:7
             cfg.channel = chan;
-            subplot(2,3,chan); ft_singleplotTFR(cfg, saccadesize);
+            subplot(2,4,chan); ft_singleplotTFR(cfg, saccadesize);
         end
         colormap('jet');
         drawnow;
