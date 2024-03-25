@@ -337,7 +337,7 @@ if plot_averages
     plot([x(3),x(4)], [congruency_er_effect(:,3:4)]', 'Color', [0, 0, 0, 0.25]);
     xticks([1,2]);
     xticklabels(congruency_labels);
-    ylim([-1.5 3.5]);
+    ylim([-1.5 5]);
     legend("location cue", "colour cue");
     title(['error effect - averaged']);
      
