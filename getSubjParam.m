@@ -3,7 +3,7 @@ function param = getSubjParam(pp)
 %% participant-specific notes
 
 %% set path and pp-specific file locations
-unique_numbers = [89, 57, 75, 12]; %needs to be in the right order
+unique_numbers = [89, 57, 75, 12, 92, 95, 90, 79, 47, 10]; %needs to be in the right order
 
 param.path = 'C:\Users\annav\Documents\Jottacloud\Neuroscience PhD\Experiments\Vidi experiments\Data\Vidi3 - location-by-colour\';
 
