@@ -8,7 +8,7 @@ display_percentageok = 1;
 plot_individuals = 0;
 plot_averages = 1;
 
-pp2do = [1:4]; 
+pp2do = [1:10]; 
 p = 0;
 
 [bar_size, colours,  dark_colours, labels, subplot_size, percentageok] = setBehaviourParam(pp2do);
@@ -34,7 +34,8 @@ for pp = pp2do
 
     %% display percentage OK
     if display_percentageok
-        fprintf('%s has %.2f%% OK trials\n\n', param.subjName, percentageok(p))
+        fprintf('%s has %.2f%% OK trials ', param.subjName, percentageok(p))
+        fprintf('and an average score of %.2f \n\n', mean(behdata.performance))
     end
 
     %% basic data checks, each pp in own subplot
