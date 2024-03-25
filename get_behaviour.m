@@ -309,6 +309,9 @@ if plot_averages
     for i = 1:ngroups*nbars_per_group
         errorbar(x(i), mean(congruency_dt_effect(:,i)), std(congruency_dt_effect(:,i)) ./ sqrt(p), "black");
     end
+    % add individuals
+    plot([x(1),x(2)], [congruency_dt_effect(:,1:2)]', 'Color', [0, 0, 0, 0.25]);
+    plot([x(3),x(4)], [congruency_dt_effect(:,3:4)]', 'Color', [0, 0, 0, 0.25]);
     xticks([1,2]);
     xticklabels(congruency_labels);
     ylim([-65 185]);
@@ -329,6 +332,9 @@ if plot_averages
     for i = 1:ngroups*nbars_per_group
         errorbar(x(i), mean(congruency_er_effect(:,i)), std(congruency_er_effect(:,i)) ./ sqrt(p), "black");
     end
+    % add individuals
+    plot([x(1),x(2)], [congruency_er_effect(:,1:2)]', 'Color', [0, 0, 0, 0.25]);
+    plot([x(3),x(4)], [congruency_er_effect(:,3:4)]', 'Color', [0, 0, 0, 0.25]);
     xticks([1,2]);
     xticklabels(congruency_labels);
     ylim([-1.5 3.5]);
