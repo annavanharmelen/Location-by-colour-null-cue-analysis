@@ -213,6 +213,16 @@ if plot_averages
     title('percentage ok trials');
     ylim([90 100]);
     xlabel('pp #');
+
+    %% does it work at all?
+    %todo
+    %congruent vs. incongruent cue (1 figure for decision time, 1 figure
+    %for error)
+
+    %% task relevance plot
+    %todo
+    %2 figures: 1 for decision time, 1 for error, conditions collapsed into
+    %task-relevant and task-irrelevant
     
     %% grand average bar graphs of data as function of condition
     figure; 
