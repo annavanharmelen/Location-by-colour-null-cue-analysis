@@ -3,9 +3,9 @@ function param = getSubjParam(pp)
 %% participant-specific notes
 
 %% set path and pp-specific file locations
-unique_numbers = [89, 57, 75, 12, 92, 95, 90, 79, 47, 10]; %needs to be in the right order
+unique_numbers = [89, 57, 75, 12, 92, 95, 90, 79, 47, 10, 85, 53, 99, 34, 74, 55, 94, 68, 73, 97, 50, 36, 93, 35, 61]; %needs to be in the right order
 
-param.path = 'C:\Users\annav\Documents\Jottacloud\Neuroscience PhD\Experiments\Vidi experiments\Data\Vidi3 - location-by-colour\';
+param.path = '\\labsdfs.labs.vu.nl\labsdfs\FGB-ETP-CogPsy-ProactiveBrainLab\core_lab_members\Anna\Data\vidi3 - location-by-colour null-cue\';
 
 if pp < 10
     param.subjName = sprintf('pp0%d', pp);
