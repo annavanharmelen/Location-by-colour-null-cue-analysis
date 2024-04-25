@@ -2,7 +2,7 @@
 % 19-06-2023, by Anna
 
 %% load data
-data_path = "C:\Users\annav\Documents\Jottacloud\Neuroscience\Year 2\Thesis\Data\Vidi1 - null-cue gaze-bias\Vidi1 Experiment participantlog\Vidi1 participantlog.xlsx";
+data_path = ...;
 data = readtable(data_path);
 
 % change strings to boolean
