@@ -5,11 +5,11 @@
 clear; clc; close all;
     
 %% parameters
-pp2do           = [1:10];
+pp2do           = [1:2];
 oneOrTwoD       = 1;        oneOrTwoD_options = {'_1D','_2D'};
 nsmooth         = 200;
 plotSinglePps   = 1;
-plotGAs         = 1;
+plotGAs         = 0;
 xlimtoplot      = [-100 1500];
 
 %% set visual parameters
@@ -74,34 +74,34 @@ if plotSinglePps
 
     % towardness for all conditions condition - gaze shift effect X saccade size
     figure;
-        cfg = [];
-        cfg.parameter = 'effect_individual';
-        cfg.figure = 'gcf';
-        cfg.zlim = [-.1 .1];
-        cfg.xlim = xlimtoplot;
-        for sp = 1:s
-            subplot(subplot_size,subplot_size,sp); hold on;
-            saccadesize.effect_individual = squeeze(d6(sp,:,:,:)); % put in data from this pp
-            cfg.channel = 4; % colour cue colour block
-            ft_singleplotTFR(cfg, saccadesize);
-            title(pp2do(sp));
-        end
-        colormap('jet');
+    cfg = [];
+    cfg.parameter = 'effect_individual';
+    cfg.figure = 'gcf';
+    cfg.zlim = [-.1 .1];
+    cfg.xlim = xlimtoplot;
+    for sp = 1:s
+        subplot(subplot_size,subplot_size,sp); hold on;
+        saccadesize.effect_individual = squeeze(d6(sp,:,:,:)); % put in data from this pp
+        cfg.channel = 4; % colour cue colour block
+        ft_singleplotTFR(cfg, saccadesize);
+        title(pp2do(sp));
+    end
+    colormap('jet');
 
     figure;
-        cfg = [];
-        cfg.parameter = 'effect_individual';
-        cfg.figure = 'gcf';
-        cfg.zlim = [-.1 .1];
-        cfg.xlim = xlimtoplot;
-        for sp = 1:s
-            subplot(subplot_size,subplot_size,sp); hold on;
-            saccadesize.effect_individual = squeeze(d6(sp,:,:,:)); % put in data from this pp
-            cfg.channel = 5; % location cue location block
-            ft_singleplotTFR(cfg, saccadesize);
-            title(pp2do(sp));
-        end
-        colormap('jet');
+    cfg = [];
+    cfg.parameter = 'effect_individual';
+    cfg.figure = 'gcf';
+    cfg.zlim = [-.1 .1];
+    cfg.xlim = xlimtoplot;
+    for sp = 1:s
+        subplot(subplot_size,subplot_size,sp); hold on;
+        saccadesize.effect_individual = squeeze(d6(sp,:,:,:)); % put in data from this pp
+        cfg.channel = 5; % location cue location block
+        ft_singleplotTFR(cfg, saccadesize);
+        title(pp2do(sp));
+    end
+    colormap('jet');
 end
 
 %% plot grand average data patterns of interest, with error bars
