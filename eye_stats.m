@@ -6,27 +6,15 @@ statcfg.xax = saccade.time;
 statcfg.npermutations = 1000;
 statcfg.clusterStatEvalaluationAlpha = 0.05;
 statcfg.nsub = s;
-%statcfg.statMethod = 'montecarlo';
-statcfg.statMethod = 'analytic';
-
-% data_cond1 = d3(:,2,451:1951);
-% data_cond2 = d3(:,4,451:1951);
-
-% analysis_period = 451:1951;
-% data_cond1 = d3(:,5,analysis_period);
-% data_cond2 = zeros(size(data_cond1));
+statcfg.statMethod = 'montecarlo';
+%statcfg.statMethod = 'analytic';
 
 ft_size = 26;
 
-data_cond1 = d3(:,2,1951:end);
-data_cond2 = d3(:,3,1951:end);
-data_cond3 = d3(:,4,1951:end);
-data_cond4 = zeros(size(data_cond1));
+data_cond1 = d3(:,4,951:1951);
+data_cond2 = d3(:,6,951:1951);
 
-% stat = frevede_ftclusterstat1D(statcfg, data_cond1, data_cond2)
-stat1 = frevede_ftclusterstat1D(statcfg, data_cond1, data_cond4)
-stat2 = frevede_ftclusterstat1D(statcfg, data_cond2, data_cond4)
-stat3 = frevede_ftclusterstat1D(statcfg, data_cond3, data_cond4)
+stat = frevede_ftclusterstat1D(statcfg, data_cond1, data_cond2)
 %% Saccade bias data - plot only effect
 mask_xxx = double(stat.mask);
 mask_xxx(mask_xxx==0) = nan; % nan data that is not part of mark
@@ -43,7 +31,7 @@ plot(xlim, [0,0], '--', 'LineWidth',2, 'Color', [0.6, 0.6, 0.6]);
 plot([0,0], ylimit, '--', 'LineWidth',2, 'Color', [0.6, 0.6, 0.6]);
 
 xlim(xlimtoplot);
-sig = plot(saccade.time(451:1951), mask_xxx*-0.18, 'Color', 'k', 'LineWidth', 4); % verticaloffset for positioning of the "significance line"
+sig = plot(saccade.time(951:1951), mask_xxx*-0.18, 'Color', 'k', 'LineWidth', 4); % verticaloffset for positioning of the "significance line"
 ylim(ylimit+[0 0.0001]);
 ylabel('Rate (Hz)');
 xlabel('Time (ms)');
@@ -52,31 +40,21 @@ fontsize(ft_size*1.5,"points")
 % legend([p1,p2,p3], saccade.label(2:4));
 
 %% Saccade bias data - plot all 3
-mask1_xxx = double(stat1.mask);
+mask1_xxx = double(stat.mask);
 mask1_xxx(mask1_xxx==0) = nan; % nan data that is not part of mark
-
-mask2_xxx = double(stat2.mask);
-mask2_xxx(mask2_xxx==0) = nan; % nan data that is not part of mark
-
-mask3_xxx = double(stat3.mask);
-mask3_xxx(mask3_xxx==0) = nan; % nan data that is not part of mark
 
 figure; hold on;
 
-p1 = frevede_errorbarplot(saccade.time, squeeze(d3(:,2,:)), colours(1,:), 'se');
-p2 = frevede_errorbarplot(saccade.time, squeeze(d3(:,3,:)), colours(2,:), 'se');
-p3 = frevede_errorbarplot(saccade.time, squeeze(d3(:,4,:)), colours(3,:), 'se');
+p1 = frevede_errorbarplot(saccade.time, squeeze(d3(:,4,:)), colours(1,:), 'se');
+p2 = frevede_errorbarplot(saccade.time, squeeze(d3(:,6,:)), colours(2,:), 'se');
 p1.LineWidth = 2.5;
 p2.LineWidth = 2.5;
-p3.LineWidth = 2.5;
 plot(xlim, [0,0], '--','LineWidth',2, 'Color', [0.6, 0.6, 0.6]);
 plot([0,0], [-0.5, 1], '--','LineWidth',2, 'Color', [0.6, 0.6, 0.6]);
 plot([1500, 1500], [-0.5, 1], '--','LineWidth',2, 'Color', [0.6, 0.6, 0.6]);
 xlim(xlimtoplot);
-sig1 = plot(saccade.time(1951:end), mask1_xxx*-0.3, 'Color', colours(1,:), 'LineWidth', 5); % verticaloffset for positioning of the "significance line"
-sig2 = plot(saccade.time(1951:end), mask2_xxx*-0.325, 'Color', colours(2,:), 'LineWidth', 5);
-sig3 = plot(saccade.time(1951:end), mask3_xxx*-0.35, 'Color', colours(3,:), 'LineWidth', 5);
-ylim([-0.5 1])
+sig1 = plot(saccade.time(951:1951), mask1_xxx*-0.3, 'Color', colours(1,:), 'LineWidth', 5); % verticaloffset for positioning of the "significance line"
+ylim([-0.5 0.5])
 yticks(linspace(-0.5, 1, 7));
 ylabel('Rate (Hz)');
 xlabel('Time (ms)');
