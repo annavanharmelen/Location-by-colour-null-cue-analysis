@@ -1,7 +1,7 @@
 # Load dependencies
 library(stats)
-install.packages('car')
 library(car)
+library(rstatix)
 
 # Load data
 data = read.table(file.choose(), header=TRUE, sep=";")
@@ -21,8 +21,8 @@ var.test(decisiontime ~ probe_type, data)
 # repeat for error data
 
 # Anova time
-dt_results <- aov(decisiontime ~ cue_type * probe_type * pp, data = data)
-summary(dt_results)
+dt.aov <- anova_test(data = data, decisiontime ~ cue_type * probe_type, dv=decisiontime, wid = pp, within=c(cue_type, probe_type))
+get_anova_table(dt.aov)
 
-er_results <- aov(error ~ cue_type * probe_type, data = data)
-summary(er_results)
+er.aov <- anova_test(data = data, error ~ cue_type * probe_type, dv=error, wid = pp, within=c(cue_type, probe_type))
+get_anova_table(er.aov)
