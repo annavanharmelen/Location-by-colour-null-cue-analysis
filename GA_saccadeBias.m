@@ -74,8 +74,6 @@ if plotSinglePps
 
     % towardness for all conditions condition - gaze shift effect X saccade size
     figure;
-    for sp = 1:s
-        subplot(subplot_size,subplot_size,sp);
         cfg = [];
         cfg.parameter = 'effect_individual';
         cfg.figure = 'gcf';
@@ -89,11 +87,8 @@ if plotSinglePps
             title(pp2do(sp));
         end
         colormap('jet');
-    end
 
     figure;
-    for sp = 1:s
-        subplot(subplot_size,subplot_size,sp);
         cfg = [];
         cfg.parameter = 'effect_individual';
         cfg.figure = 'gcf';
@@ -107,7 +102,6 @@ if plotSinglePps
             title(pp2do(sp));
         end
         colormap('jet');
-    end
 end
 
 %% plot grand average data patterns of interest, with error bars
