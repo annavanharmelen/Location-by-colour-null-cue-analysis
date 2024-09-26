@@ -29,7 +29,7 @@ for pp = pp2do
     behdata.signed_difference(behdata.signed_difference<-90) = behdata.signed_difference(behdata.signed_difference<-90)+180;
     
     %% check ok trials, just based on decision time, because this one is unlimited.
-    oktrials = abs(zscore(behdata.idle_reaction_time_in_ms))<=3; 
+    oktrials = abs(zscore(behdata.absolute_difference))<=3; 
     percentageok(p) = mean(oktrials)*100;
 
     %% display percentage OK
