@@ -29,6 +29,7 @@ for pp = pp2do
     behdata.signed_difference(behdata.signed_difference<-90) = behdata.signed_difference(behdata.signed_difference<-90)+180;
     
     %% check ok trials, just based on decision time, because this one is unlimited.
+    % oktrials = abs(zscore(behdata.idle_reaction_time_in_ms))<=3; 
     oktrials = abs(zscore(behdata.absolute_difference))<=3; 
     percentageok(p) = mean(oktrials)*100;
 
@@ -345,6 +346,11 @@ if plot_averages
     % add individuals
     plot([x(1),x(2)], [congruency_er_effect(:,1:2)]', 'Color', [0, 0, 0, 0.25]);
     plot([x(3),x(4)], [congruency_er_effect(:,3:4)]', 'Color', [0, 0, 0, 0.25]);
+    % highlight excluded participants (only works if included at the top)
+    % plot([x(1),x(2)], [congruency_er_effect(9,1:2)]', 'Color', [1, 0, 0, 0.25]);
+    % plot([x(3),x(4)], [congruency_er_effect(9,3:4)]', 'Color', [1, 0, 0, 0.25]);
+    % plot([x(1),x(2)], [congruency_er_effect(17,1:2)]', 'Color', [0, 0, 1, 0.25]);
+    % plot([x(3),x(4)], [congruency_er_effect(17,3:4)]', 'Color', [0, 0, 1, 0.25]);
     xticks([1,2]);
     xticklabels(congruency_labels);
     ylim([-1.5 5]);
