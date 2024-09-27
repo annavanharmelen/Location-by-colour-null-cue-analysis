@@ -5,11 +5,12 @@
 clear; clc; close all;
     
 %% parameters
-pp2do           = [1:27];
+pp2do           = [1:8, 10:16, 18:27];
 oneOrTwoD       = 1;        oneOrTwoD_options = {'_1D','_2D'};
 nsmooth         = 200;
-plotSinglePps   = 1;
-plotGAs         = 0;
+plotSinglePps   = 0;
+plotGAs         = 1;
+plotFigures     = 1;
 xlimtoplot      = [-100 1500];
 
 %% set visual parameters
@@ -161,4 +162,21 @@ if plotGAs
     % plot([1500,1500], [0, 7], '--', 'LineWidth',3, 'Color', [0.6, 0.6, 0.6]);
     ylim([0.2 6.8]);
 
+end
+%% main figure for paper
+if plotFigures
+    %% towardness overlay of colcue_colprobe and colcue_locprobe
+    figure;
+    hold on;
+    p1 = frevede_errorbarplot(saccade.time, squeeze(d3(:,4,:)), colours(2,:), 'se');
+    p2 = frevede_errorbarplot(saccade.time, squeeze(d3(:,6,:)), colours(1,:), 'se');
+    p1.LineWidth = 1.5;
+    p2.LineWidth = 1.5;
+    plot(xlim, [0,0], '--k');
+    plot([0,0], ylimit, '--k');
+    legend([p1, p2], saccade.label([4,6]));
+    xlim(xlimtoplot);
+    ylabel('Rate (Hz)');
+    xlabel('Time (ms)');
+    % ylimit = [-0.3, 0.3];
 end
