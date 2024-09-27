@@ -123,6 +123,12 @@ for pp = pp2do
     %% calculate aggregates of interest
     probe_labels = {"location probe", "colour probe"};
 
+    % order here is:
+    % 1: location cue (location probe) -> TR
+    % 2: colour cue (location probe) -> TI
+    % 3: location cue (colour probe) -> TI
+    % 4: colour cue (colour probe) -> TR
+
     congruency_dt_effect(p,1) = loc_probe_decisiontime(p,2) - loc_probe_decisiontime(p,1);
     congruency_dt_effect(p,2) = loc_probe_decisiontime(p,4) - loc_probe_decisiontime(p,3);
     congruency_dt_effect(p,3) = col_probe_decisiontime(p,2) - col_probe_decisiontime(p,1);
@@ -225,16 +231,16 @@ if plot_averages
     xlabel('pp #');
 
     %% does it work at all?
-    %congruent vs. incongruent cue (1 figure for decision time, 1 figure
-    %for error)
-
+    %congruent vs. incongruent cue
+    
     % decision time
     figure;
     hold on 
-    b = bar(mean(congruency_dt));
-    errorbar([1:2], mean(congruency_dt), std(congruency_dt) ./ sqrt(p), 'LineStyle', 'none', 'Color','k')
+    b = bar(mean(congruency_dt), 'FaceColor', colours(3,:), 'LineStyle', 'none');
+    errorbar([1:2], mean(congruency_dt), std(congruency_dt) ./ sqrt(p), 'LineStyle', 'none', 'Color', dark_colours(3,:), 'LineWidth', 1.5)
     xticks([1 2]);
-    title(['congruency effect - dt']);
+    xticklabels(congruency_labels);
+    title(['dt as function of congruency']);
     % add individuals
     plot([1:2], congruency_dt, 'Color', [0, 0, 0, 0.25]);
     ylim([300, 1200])
@@ -242,18 +248,48 @@ if plot_averages
     % error
     figure;
     hold on 
-    b = bar(mean(congruency_er));
-    errorbar([1:2], mean(congruency_er), std(congruency_er) ./ sqrt(p), 'LineStyle', 'none', 'Color','k')
+    b = bar(mean(congruency_er), 'FaceColor', colours(3,:), 'LineStyle', 'none');
+    errorbar([1:2], mean(congruency_er), std(congruency_er) ./ sqrt(p), 'LineStyle', 'none', 'Color', dark_colours(3,:), 'LineWidth', 1.5)
     xticks([1 2]);
-    title(['congruency effect - error']);
+    xticklabels(congruency_labels);
+    title(['error as function of congruency']);
     % add individuals
     plot([1:2], congruency_er, 'Color', [0, 0, 0, 0.25]);
     ylim([8, 31])
+    
+
 
     %% task relevance plot
-    %todo
-    %2 figures: 1 for decision time, 1 for error, conditions collapsed into
-    %task-relevant and task-irrelevant
+    %task-relevant vs. task-irrelevant cue
+
+    % decision time
+    figure;
+    hold on 
+    b1 = bar([1], mean(congruency_dt_effect(:,[1,4]), "all"), 'FaceColor', colours(3,:), 'LineStyle', 'none');
+    b2 = bar([2], mean(congruency_dt_effect(:,[2,3]), "all"), 'FaceColor', [0.5, 0.5, 0.5], 'LineStyle', 'none');
+    errorbar([1], mean(congruency_dt_effect(:,[1,4]), "all"), std(congruency_dt_effect(:,[1,4]), 0 , "all") ./ sqrt(p), 'LineStyle', 'none', 'Color', dark_colours(3,:), 'LineWidth', 1.5)
+    errorbar([2], mean(congruency_dt_effect(:,[2,3]), "all"), std(congruency_dt_effect(:,[2,3]), 0 , "all") ./ sqrt(p), 'LineStyle', 'none', 'Color', [0.8, 0.8, 0.8], 'LineWidth', 1.5)
+    xticks([1 2]);
+    xticklabels({"task relevant", "task irrelevant"});
+    title(['congruency effect - dt']);
+    % add individuals
+    plot([1:2], [reshape(congruency_dt_effect(:,[1,4]), [], 1), reshape(congruency_dt_effect(:,[2,3]), [], 1)], 'Color', [0, 0, 0, 0.25]);
+    % ylim([300, 1200])
+
+    % error
+    figure;
+    hold on 
+    b1 = bar([1], mean(congruency_er_effect(:,[1,4]), "all"), 'FaceColor', colours(3,:), 'LineStyle', 'none');
+    b2 = bar([2], mean(congruency_er_effect(:,[2,3]), "all"), 'FaceColor', [0.5, 0.5, 0.5], 'LineStyle', 'none');
+    errorbar([1], mean(congruency_er_effect(:,[1,4]), "all"), std(congruency_er_effect(:,[1,4]), 0 , "all") ./ sqrt(p), 'LineStyle', 'none', 'Color', dark_colours(3,:), 'LineWidth', 1.5)
+    errorbar([2], mean(congruency_er_effect(:,[2,3]), "all"), std(congruency_er_effect(:,[2,3]), 0 , "all") ./ sqrt(p), 'LineStyle', 'none', 'Color', [0.8, 0.8, 0.8], 'LineWidth', 1.5)
+    xticks([1 2]);
+    xticklabels({"task relevant", "task irrelevant"});
+    title(['congruency effect - error']);
+    % add individuals
+    plot([1:2], [reshape(congruency_er_effect(:,[1,4]), [], 1), reshape(congruency_er_effect(:,[2,3]), [], 1)], 'Color', [0, 0, 0, 0.25]);
+    % ylim([-3, 5])
+    
     
     %% grand average bar graphs of data as function of condition
     figure; 
@@ -373,8 +409,9 @@ if plot_averages
         x(i*2-1) = i - offset;
         x(i*2) = i + offset;
     end
+    dark_colours_for_loop = [dark_colours(1:2,:); dark_colours(1:2,:)];
     for i = 1:ngroups*nbars_per_group
-        errorbar(x(i), mean(congruency_er_effect(:,i)), std(congruency_er_effect(:,i)) ./ sqrt(p), "black", 'Color', dark_colours(i,:), 'LineWidth', 1.5);
+        errorbar(x(i), mean(congruency_er_effect(:,i)), std(congruency_er_effect(:,i)) ./ sqrt(p), "black", 'Color', dark_colours_for_loop(i,:), 'LineWidth', 1.5);
     end
     % add individuals
     plot([x(1),x(2)], [congruency_er_effect(:,1:2)]', 'Color', [0, 0, 0, 0.25]);
