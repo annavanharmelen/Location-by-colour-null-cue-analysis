@@ -10,6 +10,8 @@ if plotting
     tsel1 = edata.time{1} >= 50 & edata.time{1} <= 100; % just for plotting...
     figure;    subplot(2,1,1); hold on;    plot(edata.time{1}(tsel1), squeeze(edata.trial{1}([2,3],tsel1)));    ylim2keep1 = ylim; title('before');
 end
+ hello
+ helloeooeoeoe
 
 %% make sure onset and offset same length and make sense.
 while onsets(1) > offsets(1)     offsets(1) = []; end

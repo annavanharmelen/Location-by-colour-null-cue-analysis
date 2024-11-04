@@ -6,7 +6,7 @@ statcfg.xax = saccade.time;
 statcfg.npermutations = 1000;
 statcfg.clusterStatEvalaluationAlpha = 0.05;
 statcfg.nsub = s;
-statcfg.statMethod = 'montecarlo';
+statcfg.statMethod = 'montecarlo'; hbubuvbvyvuyb
 %statcfg.statMethod = 'analytic';
 
 % ft_size = 26;
