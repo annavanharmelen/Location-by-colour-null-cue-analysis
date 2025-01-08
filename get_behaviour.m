@@ -5,10 +5,10 @@ clc
 %% set parameters and loops
 see_performance = 0;
 display_percentageok = 1;
-plot_individuals = 0;
+plot_individuals = 1;
 plot_averages = 1;
 
-pp2do = [1:8, 10:16, 18:27]; 
+pp2do = [1:9]; 
 p = 0;
 
 [bar_size, colours, dark_colours, labels, subplot_size, percentageok] = setBehaviourParam(pp2do);
@@ -165,20 +165,14 @@ for pp = pp2do
     cue_labels = {"location cue", "colour cue"};
 
     % order here is:
-    % 1: location cue (location probe) -> TR
-    % 2: location cue (colour probe) -> TI
-    % 3: colour cue (location probe) -> TI
-    % 4: colour cue (colour probe) -> TR
+    % 1: colour cue (location probe) -> TI
+    % 2: colour cue (colour probe) -> TR
 
-    congruency_dt_effect(p,1) = loc_probe_decisiontime(p,2) - loc_probe_decisiontime(p,1);
-    congruency_dt_effect(p,2) = col_probe_decisiontime(p,2) - col_probe_decisiontime(p,1);
-    congruency_dt_effect(p,3) = loc_probe_decisiontime(p,4) - loc_probe_decisiontime(p,3);
-    congruency_dt_effect(p,4) = col_probe_decisiontime(p,4) - col_probe_decisiontime(p,3);
+    congruency_dt_effect(p,1) = loc_probe_decisiontime(p,4) - loc_probe_decisiontime(p,3);
+    congruency_dt_effect(p,2) = col_probe_decisiontime(p,4) - col_probe_decisiontime(p,3);
 
-    congruency_er_effect(p,1) = loc_probe_error(p,2) - loc_probe_error(p,1);
-    congruency_er_effect(p,2) = col_probe_error(p,2) - col_probe_error(p,1);
-    congruency_er_effect(p,3) = loc_probe_error(p,4) - loc_probe_error(p,3);
-    congruency_er_effect(p,4) = col_probe_error(p,4) - col_probe_error(p,3);
+    congruency_er_effect(p,1) = loc_probe_error(p,4) - loc_probe_error(p,3);
+    congruency_er_effect(p,2) = col_probe_error(p,4) - col_probe_error(p,3);
 
     %% plot individuals
     dt_lim = 1200;

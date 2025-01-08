@@ -4,7 +4,7 @@
 clear; clc; close all;
 
 %% set loops
-for pp      = [26:27];
+for pp      = [1:9];
 
 %% Set trig labels and epoch timings
 values2use  = [21:29,210:216]; % capture-cue onset
@@ -81,7 +81,7 @@ cfg.channel = {'eyeX','eyeY','eyePupil'};
 eyedata = ft_selectdata(cfg, eyedata);
 
 %% save data as function of pp name and eyedata session
-save([param.path, '\epoched_data\eyedata_vidi3','_'  param.subjName], 'eyedata');
+save([param.path, '\epoched_data\eyedata_vidi3_2','_'  param.subjName], 'eyedata');
 
 %% test plot
 figure; 
