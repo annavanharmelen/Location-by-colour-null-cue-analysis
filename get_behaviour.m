@@ -82,6 +82,46 @@ for pp = pp2do
 
     left_target_trials = ismember(behdata.target_bar, {'left'});
     right_target_trials = ismember(behdata.target_bar, {'right'});
+
+    %% mixture models of target error
+    % get non-target orientations
+    non_target_orientations = zeros(size(behdata.trial_number));
+    right_target_trials = find(strcmp(behdata.target_bar,'right'));
+    left_target_trials = find(strcmp(behdata.target_bar,'left'));
+    non_target_orientations(right_target_trials) = behdata.left_orientation(right_target_trials);
+    non_target_orientations(left_target_trials) = behdata.right_orientation(left_target_trials);
+    
+    % turn all orientations to radians...
+    non_target_orientations = (non_target_orientations/90*pi);
+    behdata.report_orientation = behdata.report_orientation/90*pi;
+    behdata.target_orientation = behdata.target_orientation/90*pi;
+    
+    % create model for each condition
+    cond_labels = ["locc_locp", "colc_locp", "locc_colp", "colc_colp"];
+    conditions = [1 : size(cond_labels, 2)];
+    condition_sets = [location_cue_trials&location_probe_trials, colour_cue_trials&location_probe_trials, location_cue_trials&colour_probe_trials, colour_cue_trials&colour_probe_trials];
+
+    for condition = conditions
+        [B, LL] = mixtureFit(behdata.report_orientation(condition_sets(:,condition)&congruent_trials&oktrials), ...
+            behdata.target_orientation(condition_sets(:,condition)&congruent_trials&oktrials),...
+            non_target_orientations(condition_sets(:,condition)&congruent_trials&oktrials));
+        
+        precision_c(p, condition) = B(1);
+        pT_c(p, condition) = B(2);
+        pNT_c(p, condition) = B(3);
+        pU_c(p, condition) = B(4);
+    end
+
+    for condition = conditions
+        [B, LL] = mixtureFit(behdata.report_orientation(condition_sets(:,condition)&incongruent_trials&oktrials), ...
+            behdata.target_orientation(condition_sets(:,condition)&incongruent_trials&oktrials),...
+            non_target_orientations(condition_sets(:,condition)&incongruent_trials&oktrials));
+        
+        precision_i(p, condition) = B(1);
+        pT_i(p, condition) = B(2);
+        pNT_i(p, condition) = B(3);
+        pU_i(p, condition) = B(4);
+    end
     
     %% extract data of interest
     overall_dt(p,1) = mean(behdata.idle_reaction_time_in_ms(oktrials));
@@ -119,24 +159,25 @@ for pp = pp2do
     congruency_er(p,1) = mean(behdata.absolute_difference(congruent_trials&oktrials));
     congruency_er(p,2) = mean(behdata.absolute_difference(incongruent_trials&oktrials));
 
-
+    
     %% calculate aggregates of interest
-    probe_labels = {"location probe", "colour probe"};
+    probe_labels = {"location probe", "colour probe", "location probe", "colour probe"};
+    cue_labels = {"location cue", "colour cue"};
 
     % order here is:
     % 1: location cue (location probe) -> TR
-    % 2: colour cue (location probe) -> TI
-    % 3: location cue (colour probe) -> TI
+    % 2: location cue (colour probe) -> TI
+    % 3: colour cue (location probe) -> TI
     % 4: colour cue (colour probe) -> TR
 
     congruency_dt_effect(p,1) = loc_probe_decisiontime(p,2) - loc_probe_decisiontime(p,1);
-    congruency_dt_effect(p,2) = loc_probe_decisiontime(p,4) - loc_probe_decisiontime(p,3);
-    congruency_dt_effect(p,3) = col_probe_decisiontime(p,2) - col_probe_decisiontime(p,1);
+    congruency_dt_effect(p,2) = col_probe_decisiontime(p,2) - col_probe_decisiontime(p,1);
+    congruency_dt_effect(p,3) = loc_probe_decisiontime(p,4) - loc_probe_decisiontime(p,3);
     congruency_dt_effect(p,4) = col_probe_decisiontime(p,4) - col_probe_decisiontime(p,3);
 
     congruency_er_effect(p,1) = loc_probe_error(p,2) - loc_probe_error(p,1);
-    congruency_er_effect(p,2) = loc_probe_error(p,4) - loc_probe_error(p,3);
-    congruency_er_effect(p,3) = col_probe_error(p,2) - col_probe_error(p,1);
+    congruency_er_effect(p,2) = col_probe_error(p,2) - col_probe_error(p,1);
+    congruency_er_effect(p,3) = loc_probe_error(p,4) - loc_probe_error(p,3);
     congruency_er_effect(p,4) = col_probe_error(p,4) - col_probe_error(p,3);
 
     %% plot individuals
@@ -207,7 +248,15 @@ for pp = pp2do
     end
 end
 
-
+    pT_effect = pT_c - pT_i;
+    pNT_effect = pNT_c - pNT_i;
+    pU_effect = pU_c - pU_i;
+    precision_effect = precision_c - precision_i;
+    
+    writematrix(congruency_er, [param.path, '\saved_data\beh_congruency_er']);
+    writematrix(congruency_dt, [param.path, '\saved_data\beh_congruency_dt']);
+    writematrix(congruency_er_effect, [param.path, '\saved_data\beh_congruency_er_effect']);
+    writematrix(congruency_dt_effect, [param.path, '\saved_data\beh_congruency_dt_effect']);
 %% all pp plot
 if plot_averages
 
@@ -256,9 +305,7 @@ if plot_averages
     % add individuals
     plot([1:2], congruency_er, 'Color', [0, 0, 0, 0.25]);
     ylim([8, 31])
-    
-
-
+   
     %% task relevance plot
     %task-relevant vs. task-irrelevant cue
 
@@ -267,11 +314,11 @@ if plot_averages
     hold on 
     b1 = bar([1], mean(congruency_dt_effect(:,[1,4]), "all"), 'FaceColor', colours(3,:), 'LineStyle', 'none');
     b2 = bar([2], mean(congruency_dt_effect(:,[2,3]), "all"), 'FaceColor', [0.5, 0.5, 0.5], 'LineStyle', 'none');
-    errorbar([1], mean(congruency_dt_effect(:,[1,4]), "all"), std(congruency_dt_effect(:,[1,4]), 0 , "all") ./ sqrt(p), 'LineStyle', 'none', 'Color', dark_colours(3,:), 'LineWidth', 1.5)
-    errorbar([2], mean(congruency_dt_effect(:,[2,3]), "all"), std(congruency_dt_effect(:,[2,3]), 0 , "all") ./ sqrt(p), 'LineStyle', 'none', 'Color', [0.8, 0.8, 0.8], 'LineWidth', 1.5)
+    errorbar([1], mean(congruency_dt_effect(:,[1,4]), "all"), std(mean(congruency_dt_effect(:,[1,4]), 2)) ./ sqrt(p), 'LineStyle', 'none', 'Color', dark_colours(3,:), 'LineWidth', 1.5)
+    errorbar([2], mean(congruency_dt_effect(:,[2,3]), "all"), std(mean(congruency_dt_effect(:,[2,3]), 2)) ./ sqrt(p), 'LineStyle', 'none', 'Color', [0.8, 0.8, 0.8], 'LineWidth', 1.5)
     xticks([1 2]);
     xticklabels({"task relevant", "task irrelevant"});
-    title(['congruency effect - dt']);
+    title(['relevancy effect - dt']);
     % add individuals
     plot([1:2], [reshape(congruency_dt_effect(:,[1,4]), [], 1), reshape(congruency_dt_effect(:,[2,3]), [], 1)], 'Color', [0, 0, 0, 0.25]);
     % ylim([300, 1200])
@@ -281,15 +328,28 @@ if plot_averages
     hold on 
     b1 = bar([1], mean(congruency_er_effect(:,[1,4]), "all"), 'FaceColor', colours(3,:), 'LineStyle', 'none');
     b2 = bar([2], mean(congruency_er_effect(:,[2,3]), "all"), 'FaceColor', [0.5, 0.5, 0.5], 'LineStyle', 'none');
-    errorbar([1], mean(congruency_er_effect(:,[1,4]), "all"), std(congruency_er_effect(:,[1,4]), 0 , "all") ./ sqrt(p), 'LineStyle', 'none', 'Color', dark_colours(3,:), 'LineWidth', 1.5)
-    errorbar([2], mean(congruency_er_effect(:,[2,3]), "all"), std(congruency_er_effect(:,[2,3]), 0 , "all") ./ sqrt(p), 'LineStyle', 'none', 'Color', [0.8, 0.8, 0.8], 'LineWidth', 1.5)
+    errorbar([1], mean(congruency_er_effect(:,[1,4]), "all"), std(mean(congruency_er_effect(:,[1,4]), 2)) ./ sqrt(p), 'LineStyle', 'none', 'Color', dark_colours(3,:), 'LineWidth', 1.5)
+    errorbar([2], mean(congruency_er_effect(:,[2,3]), "all"), std(mean(congruency_er_effect(:,[2,3]), 2)) ./ sqrt(p), 'LineStyle', 'none', 'Color', [0.8, 0.8, 0.8], 'LineWidth', 1.5)
     xticks([1 2]);
     xticklabels({"task relevant", "task irrelevant"});
-    title(['congruency effect - error']);
+    title(['relevancy effect - error']);
     % add individuals
     plot([1:2], [reshape(congruency_er_effect(:,[1,4]), [], 1), reshape(congruency_er_effect(:,[2,3]), [], 1)], 'Color', [0, 0, 0, 0.25]);
-    % ylim([-3, 5])
-    
+    ylim([-2, 2])
+
+    % pT
+    figure;
+    hold on 
+    b1 = bar([1], mean(pT_effect(:,[1,4]), "all"), 'FaceColor', colours(3,:), 'LineStyle', 'none');
+    b2 = bar([2], mean(pT_effect(:,[2,3]), "all"), 'FaceColor', [0.5, 0.5, 0.5], 'LineStyle', 'none');
+    errorbar([1], mean(pT_effect(:,[1,4]), "all"), std(pT_effect(:,[1,4]), 0 , "all") ./ sqrt(p), 'LineStyle', 'none', 'Color', dark_colours(3,:), 'LineWidth', 1.5)
+    errorbar([2], mean(pT_effect(:,[2,3]), "all"), std(pT_effect(:,[2,3]), 0 , "all") ./ sqrt(p), 'LineStyle', 'none', 'Color', [0.8, 0.8, 0.8], 'LineWidth', 1.5)
+    xticks([1 2]);
+    xticklabels({"task relevant", "task irrelevant"});
+    title(['relevancy effect - pT']);
+    % add individuals
+    plot([1:2], [reshape(pT_effect(:,[1,4]), [], 1), reshape(pT_effect(:,[2,3]), [], 1)], 'Color', [0, 0, 0, 0.25]);
+    %ylim([-0.1, 0.2]);
     
     %% grand average bar graphs of data as function of condition
     figure; 
@@ -372,9 +432,12 @@ if plot_averages
     legend("congruent", "incongruent");
     title(['error, colour probe - averaged']);
 
+    %% main behavioural figure - dt
     figure; 
     hold on
-    bar([1,2], [mean(congruency_dt_effect(:,1:2)); mean(congruency_dt_effect(:,3:4))]);
+    b = bar([1,2], [mean(congruency_dt_effect(:,1:2)); mean(congruency_dt_effect(:,3:4))], 'LineStyle', 'none');
+    b(1).FaceColor = colours(1,:);
+    b(2).FaceColor = colours(2,:);
     % add errorbars
     ngroups = 2;
     nbars_per_group = 2;
@@ -383,22 +446,23 @@ if plot_averages
         x(i*2-1) = i - offset;
         x(i*2) = i + offset;
     end
+    dark_colours_for_loop = [dark_colours(1:2,:); dark_colours(1:2,:)];
     for i = 1:ngroups*nbars_per_group
-        errorbar(x(i), mean(congruency_dt_effect(:,i)), std(congruency_dt_effect(:,i)) ./ sqrt(p), "black");
+        errorbar(x(i), mean(congruency_dt_effect(:,i)), std(congruency_dt_effect(:,i)) ./ sqrt(p), "black", 'Color', dark_colours_for_loop(i,:), 'LineWidth', 1.5);
     end
     % add individuals
     plot([x(1),x(2)], [congruency_dt_effect(:,1:2)]', 'Color', [0, 0, 0, 0.25]);
     plot([x(3),x(4)], [congruency_dt_effect(:,3:4)]', 'Color', [0, 0, 0, 0.25]);
     xticks([1,2]);
-    xticklabels(probe_labels);
+    xticklabels(cue_labels);
     ylim([-65 185]);
-    legend("location cue", "colour cue");
+    legend("location probe", "colour probe");
     title(['decision time effect - averaged']);
     
-    %% main behavioural figure
+    %% main behavioural figure - error
     figure; 
     hold on
-    b = bar([1,2], [mean(congruency_er_effect(:,1:2)); mean(congruency_er_effect(:,3:4))], 'LineStyle', 'none');
+    b = bar([1,2], [mean(congruency_er_effect(:,[1,2])); mean(congruency_er_effect(:,[3,4]))], 'LineStyle', 'none');
     b(1).FaceColor = colours(1,:);
     b(2).FaceColor = colours(2,:);
     % add errorbars
@@ -414,8 +478,74 @@ if plot_averages
         errorbar(x(i), mean(congruency_er_effect(:,i)), std(congruency_er_effect(:,i)) ./ sqrt(p), "black", 'Color', dark_colours_for_loop(i,:), 'LineWidth', 1.5);
     end
     % add individuals
-    plot([x(1),x(2)], [congruency_er_effect(:,1:2)]', 'Color', [0, 0, 0, 0.25]);
-    plot([x(3),x(4)], [congruency_er_effect(:,3:4)]', 'Color', [0, 0, 0, 0.25]);
+    plot([x(1),x(2)], [congruency_er_effect(:,[1,2])]', 'Color', [0, 0, 0, 0.25]);
+    plot([x(3),x(4)], [congruency_er_effect(:,[3,4])]', 'Color', [0, 0, 0, 0.25]);
+    % highlight excluded participants (only works if included at the top)
+    % plot([x(1),x(2)], [congruency_er_effect(9,1:2)]', 'Color', [1, 0, 0, 0.25]);
+    % plot([x(3),x(4)], [congruency_er_effect(9,3:4)]', 'Color', [1, 0, 0, 0.25]);
+    % plot([x(1),x(2)], [congruency_er_effect(17,1:2)]', 'Color', [0, 0, 1, 0.25]);
+    % plot([x(3),x(4)], [congruency_er_effect(17,3:4)]', 'Color', [0, 0, 1, 0.25]);
+    xticks([1,2]);
+    xticklabels(cue_labels);
+    ylim([-3.5 6.5]);
+    legend("location probe", "colour probe");
+    title(['error effect - averaged']);
+    
+    %% main behavioural figure - pT
+    figure; 
+    hold on
+    b = bar([1,2], [mean(pT_effect(:,1:2)); mean(pT_effect(:,3:4))], 'LineStyle', 'none');
+    b(1).FaceColor = colours(1,:);
+    b(2).FaceColor = colours(2,:);
+    % add errorbars
+    ngroups = 2;
+    nbars_per_group = 2;
+    offset = min(0.8, nbars_per_group/(nbars_per_group + 1.5)) / 4;
+    for i = 1:ngroups
+        x(i*2-1) = i - offset;
+        x(i*2) = i + offset;
+    end
+    dark_colours_for_loop = [dark_colours(1:2,:); dark_colours(1:2,:)];
+    for i = 1:ngroups*nbars_per_group
+        errorbar(x(i), mean(pT_effect(:,i)), std(pT_effect(:,i)) ./ sqrt(p), "black", 'Color', dark_colours_for_loop(i,:), 'LineWidth', 1.5);
+    end
+    % add individuals
+    plot([x(1),x(2)], [pT_effect(:,1:2)]', 'Color', [0, 0, 0, 0.25]);
+    plot([x(3),x(4)], [pT_effect(:,3:4)]', 'Color', [0, 0, 0, 0.25]);
+    % highlight excluded participants (only works if included at the top)
+    % plot([x(1),x(2)], [congruency_er_effect(9,1:2)]', 'Color', [1, 0, 0, 0.25]);
+    % plot([x(3),x(4)], [congruency_er_effect(9,3:4)]', 'Color', [1, 0, 0, 0.25]);
+    % plot([x(1),x(2)], [congruency_er_effect(17,1:2)]', 'Color', [0, 0, 1, 0.25]);
+    % plot([x(3),x(4)], [congruency_er_effect(17,3:4)]', 'Color', [0, 0, 1, 0.25]);
+    xticks([1,2]);
+    xticklabels(cue_labels);
+    % ylim([-3.5 6.5]);
+    legend("location probe", "colour probe");
+    title(['pT effect - averaged']);
+
+    % set(gcf,'position',[0,0, 700,1080])
+
+     %% main behavioural figure - pNT
+    figure; 
+    hold on
+    b = bar([1,2], [mean(pNT_effect(:,1:2)); mean(pNT_effect(:,3:4))], 'LineStyle', 'none');
+    b(1).FaceColor = colours(1,:);
+    b(2).FaceColor = colours(2,:);
+    % add errorbars
+    ngroups = 2;
+    nbars_per_group = 2;
+    offset = min(0.8, nbars_per_group/(nbars_per_group + 1.5)) / 4;
+    for i = 1:ngroups
+        x(i*2-1) = i - offset;
+        x(i*2) = i + offset;
+    end
+    dark_colours_for_loop = [dark_colours(1:2,:); dark_colours(1:2,:)];
+    for i = 1:ngroups*nbars_per_group
+        errorbar(x(i), mean(pNT_effect(:,i)), std(pNT_effect(:,i)) ./ sqrt(p), "black", 'Color', dark_colours_for_loop(i,:), 'LineWidth', 1.5);
+    end
+    % add individuals
+    plot([x(1),x(2)], [pNT_effect(:,1:2)]', 'Color', [0, 0, 0, 0.25]);
+    plot([x(3),x(4)], [pNT_effect(:,3:4)]', 'Color', [0, 0, 0, 0.25]);
     % highlight excluded participants (only works if included at the top)
     % plot([x(1),x(2)], [congruency_er_effect(9,1:2)]', 'Color', [1, 0, 0, 0.25]);
     % plot([x(3),x(4)], [congruency_er_effect(9,3:4)]', 'Color', [1, 0, 0, 0.25]);
@@ -423,9 +553,9 @@ if plot_averages
     % plot([x(3),x(4)], [congruency_er_effect(17,3:4)]', 'Color', [0, 0, 1, 0.25]);
     xticks([1,2]);
     xticklabels(probe_labels);
-    ylim([-3.5 6.5]);
+    % ylim([-3.5 6.5]);
     legend("location cue", "colour cue");
-    title(['error effect - averaged']);
+    title(['pNT effect - averaged']);
 
     % set(gcf,'position',[0,0, 700,1080])
      
