@@ -4,7 +4,7 @@
 clear; clc; close all;
 
 %% parameters
-for pp = [1:9];
+for pp = [10:25];
 
     oneOrTwoD       = 1; oneOrTwoD_options = {'_1D','_2D'};
     plotResults     = 0;

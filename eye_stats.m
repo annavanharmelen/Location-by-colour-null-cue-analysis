@@ -3,7 +3,7 @@
 % by Anna, 04-07-2023
 %% Saccade bias data - stats
 statcfg.xax = saccade.time;
-statcfg.npermutations = 1000;
+statcfg.npermutations = 10000;
 statcfg.clusterStatEvalaluationAlpha = 0.05;
 statcfg.nsub = s;
 statcfg.statMethod = 'montecarlo';
@@ -17,9 +17,9 @@ null_data = zeros(size(data_cond1));
 
 stat1 = frevede_ftclusterstat1D(statcfg, data_cond1, null_data)
 stat2 = frevede_ftclusterstat1D(statcfg, data_cond2, null_data)
-stat_comp = frevede_ftclusterstat1D(statcfg, data_cond1, data_cond2)
+% stat_comp = frevede_ftclusterstat1D(statcfg, data_cond1, data_cond2)
 %% Saccade bias data - plot only effect
-mask_xxx = double(stat_comp.mask);
+mask_xxx = double(stat2.mask);
 mask_xxx(mask_xxx==0) = nan; % nan data that is not part of mark
 
 figure; hold on;
